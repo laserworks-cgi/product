@@ -1,0 +1,2291 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#2563eb" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="LaserWorks" />
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <title>Compact Dashboard</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    /* Sidebar: border-r dan shadow disembunyikan saat menutup, hanya muncul saat expand */
+    #sidebar {
+      width: 64px;
+      transition: width 250ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 250ms ease, border-color 250ms ease;
+      overflow: hidden;
+      border-right: 1px solid transparent;
+      box-shadow: none;
+      height: 100vh;
+      background: #fff;
+      z-index: 20;
+    }
+
+    #sidebar.expanded {
+      width: 220px;
+      border-right: 1px solid #f1f5f9;
+      box-shadow: 4px 0 16px -4px rgba(0, 0, 0, 0.04);
+    }
+
+    .menu-label {
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      transition: opacity 150ms ease;
+    }
+
+    #sidebar.expanded .menu-label {
+      opacity: 1;
+      width: auto;
+    }
+
+    .slide-open-icon {
+      opacity: 1;
+      transition: opacity 200ms ease, transform 200ms ease;
+    }
+
+    #sidebar.expanded .slide-open-icon {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.85);
+    }
+
+    .close-side-btn {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.85);
+      transition: opacity 200ms ease, transform 180ms ease, color 150ms ease;
+    }
+
+    .close-side-btn:hover {
+      transform: scale(1.15) !important;
+    }
+
+    #sidebar.expanded .close-side-btn {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1);
+    }
+
+    /* Jarak antar ikon menu ditambah 70% (~10px), padding kiri ditambah 40% (~11.2px) */
+    .menu-nav-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-left: 11px;
+      padding-right: 8px;
+      width: 100%;
+    }
+
+    .menu-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      min-width: 0;
+      white-space: nowrap;
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 7px 8px 7px 11px;
+      border-radius: 0.5rem;
+    }
+
+    .menu-btn .menu-icon {
+      flex-shrink: 0;
+      transition: transform 180ms ease, color 150ms ease;
+    }
+
+    .menu-btn:hover .menu-icon {
+      transform: scale(1.15);
+    }
+
+    /* 7 item per baris */
+    #cards-container {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 14px;
+      width: 100%;
+      padding-top: 6px;
+      padding-bottom: 6px;
+      overflow: visible;
+    }
+
+    @media (max-width: 1100px) {
+      #cards-container {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      }
+    }
+
+    .stat-card-item {
+      width: 100%;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card-frame {
+      aspect-ratio: 5 / 7;
+      width: 100%;
+      border-radius: 0.75rem;
+      border: 1px solid #f3f4f6;
+      background-color: #f8fafc;
+      overflow: hidden;
+      position: relative;
+      transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 200ms ease, border-color 200ms ease;
+    }
+
+    .stat-card-item:hover .card-frame {
+      transform: translateY(-3px);
+      border-color: #7dd3fc;
+      box-shadow: 0 6px 14px rgba(56, 189, 248, 0.28);
+    }
+
+    .stat-card-item.card-active .card-frame {
+      border-color: #f59e0b !important;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.5) !important;
+      transform: translateY(-2px);
+    }
+
+    /* Status Selesai */
+    .stat-card-item.is-completed .card-frame {
+      border-color: #10b981 !important;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.45) !important;
+    }
+
+    .card-meta-outside {
+      display: flex;
+      flex-direction: column;
+      padding: 0 2px;
+      line-height: 1.25;
+    }
+
+    .add-card-item {
+      width: 100%;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .add-card-frame {
+      aspect-ratio: 5 / 7;
+      width: 100%;
+      border-radius: 0.75rem;
+      border: 2px dashed #93c5fd;
+      background-color: #eff6ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: all 200ms ease;
+    }
+
+    .add-card-item:hover .add-card-frame {
+      transform: translateY(-3px);
+      border-color: #2563eb;
+      background-color: #dbeafe;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.18);
+    }
+
+    .dropzone-area {
+      border: 2px dashed #cbd5e1;
+      transition: all 180ms ease;
+    }
+
+    .dropzone-area.dragover {
+      border-color: #2563eb;
+      background-color: #eff6ff;
+    }
+
+    @keyframes fadeInPage {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .page-animated {
+      animation: fadeInPage 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .title-inline-input {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid #2563eb;
+      outline: none;
+      padding: 0;
+      margin: 0;
+      color: #1e3a8a;
+      font-size: inherit;
+      font-weight: inherit;
+      line-height: inherit;
+      letter-spacing: inherit;
+      caret-color: #2563eb;
+      border-radius: 0;
+      width: 100%;
+      min-width: 120px;
+    }
+
+    #main-area {
+      min-width: 0;
+      flex: 1;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f8fafc;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Rasio 4 : 4 : 3 */
+    .col-prop-4 {
+      flex: 4 1 0%;
+      min-width: 0;
+    }
+    .col-prop-3 {
+      flex: 3 1 0%;
+      min-width: 0;
+    }
+
+    .rich-editor:empty:before {
+      content: attr(data-placeholder);
+      color: #9ca3af;
+      pointer-events: none;
+      display: block;
+    }
+  </style>
+</head>
+
+<body class="h-screen w-screen overflow-hidden text-gray-800">
+
+  <div class="flex h-screen w-screen overflow-hidden bg-white">
+
+    <!-- SIDEBAR (Ikon Search telah dihapus dari menu samping) -->
+    <aside id="sidebar"
+      class="flex shrink-0 flex-col justify-between items-center bg-white py-3.5">
+
+      <nav class="menu-nav-container">
+        <div class="relative flex h-9 w-full items-center">
+          <button id="btn-sidebar-toggle"
+            class="menu-btn text-gray-900 hover:text-blue-600 transition-colors duration-150"
+            title="Buka / Tutup Sidebar"
+            aria-label="Buka atau tutup sidebar"
+            aria-expanded="false">
+            <i data-lucide="panel-left" class="menu-icon slide-open-icon h-5 w-5"></i>
+          </button>
+
+          <button id="btn-extra-app-launcher"
+            class="close-side-btn absolute right-1.5 p-1.5 text-gray-900 hover:text-blue-600 transition-colors duration-150"
+            title="Tutup Menu"
+            aria-label="Tutup menu samping">
+            <i data-lucide="panel-left-close" class="h-5 w-5"></i>
+          </button>
+        </div>
+
+        <button data-menu="home"
+          class="menu-btn nav-page-btn text-blue-600 hover:text-blue-600 transition-colors duration-150"
+          title="Home">
+          <i data-lucide="home" class="menu-icon h-5 w-5"></i>
+          <span class="menu-label text-xs font-medium">Home</span>
+        </button>
+
+        <button data-menu="notifications"
+          class="menu-btn nav-page-btn text-gray-900 hover:text-blue-600 transition-colors duration-150"
+          title="Notifications">
+          <i data-lucide="bell" class="menu-icon h-5 w-5"></i>
+          <span class="menu-label text-xs font-medium">Notifications</span>
+        </button>
+
+        <button data-menu="settings"
+          class="menu-btn nav-page-btn text-gray-900 hover:text-blue-600 transition-colors duration-150"
+          title="Settings">
+          <i data-lucide="settings" class="menu-icon h-5 w-5"></i>
+          <span class="menu-label text-xs font-medium">Settings</span>
+        </button>
+      </nav>
+
+      <div class="w-full px-2 pl-3">
+        <div class="flex items-center gap-2 p-1.5 rounded-lg bg-gray-50 border border-gray-100">
+          <span id="db-status-dot" class="h-2 w-2 rounded-full bg-emerald-500 shrink-0 ml-1"></span>
+          <span class="menu-label text-[11px] text-gray-500 font-medium truncate">IndexedDB Ready</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN AREA -->
+    <div id="main-area" class="flex flex-1 flex-col h-screen overflow-hidden bg-white">
+
+      <!-- MAIN HEADER (Border ke kontainer dihilangkan, Pencarian interaktif dengan keyboard auto-fokus) -->
+      <header class="flex h-12 shrink-0 items-center justify-between bg-white px-4 border-b-0 gap-2 sm:gap-3">
+        
+        <!-- Breadcrumb & Metadata Sederhana di Home (Murni Teks, Tanpa Kartu) -->
+        <div class="flex items-center gap-2 text-xs min-w-0 flex-1">
+          <div class="flex items-center gap-1.5 font-semibold text-gray-800 shrink-0">
+            <span class="text-gray-900">LaserWorks</span>
+            <span class="text-gray-300">/</span>
+            <button id="header-page-title-btn" class="font-normal text-gray-600 hover:text-blue-600 transition-colors focus:outline-none">Home</button>
+          </div>
+
+          <!-- Metadata Pekerjaan Aktif (Murni Teks Sederhana) -->
+          <div id="header-active-meta" class="hidden items-center gap-2 overflow-x-auto custom-scrollbar whitespace-nowrap text-xs font-normal text-gray-500 py-0.5">
+            <span class="text-gray-300">/</span>
+            <span id="header-card-title" class="font-bold text-gray-900">Nama Item</span>
+            <span class="text-gray-300">•</span>
+            <span id="header-meta-qty" class="text-gray-600 font-semibold">0 pcs</span>
+            <span class="text-gray-300">•</span>
+            <span id="header-meta-deadline" class="text-amber-700 font-semibold">-</span>
+            <span class="text-gray-300">•</span>
+            <span id="header-meta-subtask" class="text-emerald-700 font-semibold">0/0 Selesai</span>
+            <span class="text-gray-300">•</span>
+            <span id="header-meta-process" class="text-rose-700 font-semibold">Ditulis</span>
+            <span class="text-gray-300">•</span>
+            <span id="header-meta-attachment" class="text-sky-700 font-semibold">0 File</span>
+          </div>
+        </div>
+
+        <!-- Sisi Kanan: Form Search, Notifikasi & Profil Admin -->
+        <div class="flex items-center gap-2 shrink-0">
+          
+          <!-- SEARCH CONTAINER: Ikon Search & Form Pencarian Expandable -->
+          <div class="relative flex items-center">
+            <!-- Tombol Ikon Search -->
+            <button id="btn-header-search-toggle" type="button" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:text-blue-600 hover:bg-gray-100 transition" title="Cari Pekerjaan (Nama, Jumlah, Deadline)">
+              <i data-lucide="search" class="h-4 w-4"></i>
+            </button>
+
+            <!-- Form Input Search Expandable -->
+            <div id="header-search-bar" class="hidden items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1 text-xs transition-all w-52 sm:w-72 md:w-80 shadow-2xs">
+              <i data-lucide="search" class="h-3.5 w-3.5 text-gray-400 shrink-0"></i>
+              <input type="text" id="header-search-input" placeholder="Cari nama, jumlah (17 pcs), deadline (17 Okt)..." class="w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 p-0 text-xs text-gray-800 placeholder-gray-400" autocomplete="off" />
+              <button type="button" id="btn-clear-search" class="hidden text-gray-400 hover:text-gray-600 p-0.5 rounded transition" title="Hapus teks pencarian">
+                <i data-lucide="x" class="h-3 w-3"></i>
+              </button>
+              <button type="button" id="btn-close-search" class="text-gray-400 hover:text-gray-600 p-0.5 rounded transition" title="Tutup pencarian">
+                <i data-lucide="x" class="h-3.5 w-3.5"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tombol Notifikasi -->
+          <button class="relative rounded-lg p-1.5 text-gray-500 hover:bg-gray-50 transition" title="Notifications">
+            <i data-lucide="bell" class="h-4 w-4"></i>
+            <span class="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-red-500"></span>
+          </button>
+
+          <!-- Profil Admin -->
+          <div class="flex items-center gap-1.5 pl-2 border-l border-gray-100">
+            <div class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-[11px] font-semibold text-blue-600">
+              LW
+            </div>
+            <span class="hidden text-xs font-medium sm:block text-gray-700">Admin</span>
+          </div>
+
+        </div>
+      </header>
+
+      <!-- MAIN BODY CONTAINER -->
+      <main class="flex-1 flex flex-col overflow-hidden p-3 md:p-4">
+
+        <!-- HEADER KARTU STATIS UNTUK MENU LAIN -->
+        <section id="page-header-card" class="mb-3 hidden shrink-0 rounded-xl border border-gray-100 bg-white p-3.5">
+          <div class="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+            <div>
+              <div class="mb-1 flex items-center gap-1.5 text-[11px] text-gray-400">
+                <i data-lucide="layout-dashboard" class="h-3 w-3"></i>
+                <span id="breadcrumb">Home</span>
+              </div>
+              <h1 id="page-title" class="text-base font-semibold tracking-tight text-gray-900">Home</h1>
+              <p id="page-description" class="text-xs text-gray-500">Ringkasan aktivitas dan informasi terbaru.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- PANEL SATU HALAMAN PENUH: DIBAGI 3 BAGIAN (4:4:3) -->
+        <section id="full-page-panel" class="hidden page-animated flex-1 flex flex-col gap-3 overflow-hidden min-h-0">
+          
+          <!-- HEADER PANEL COMPACT DENGAN 6 KARTU BERWARNA -->
+          <div class="shrink-0 rounded-xl border border-gray-200/80 bg-white p-2.5 shadow-xs">
+            <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-0.5">
+              
+              <!-- Tombol Kembali -->
+              <button id="btn-back-to-home" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-100 hover:text-blue-600" title="Kembali ke Home">
+                <i data-lucide="arrow-left" class="h-4 w-4"></i>
+              </button>
+
+              <!-- 1. KARTU NAMA PRODUK (BIRU) -->
+              <div id="name-card" class="group flex shrink-0 items-center gap-2.5 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50/70 hover:bg-blue-100/70 hover:border-blue-300 transition-all cursor-pointer shadow-2xs text-left min-w-[150px] max-w-[220px]" title="Klik untuk edit nama produk">
+                <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-blue-100 text-blue-700 group-hover:bg-blue-200/80 transition-colors">
+                  <i data-lucide="box" class="h-4 w-4"></i>
+                </div>
+                <div class="flex flex-col min-w-0 flex-1">
+                  <span class="text-[9px] font-bold uppercase tracking-wider text-blue-700/80 leading-none">Nama Produk</span>
+                  <div id="full-panel-title-wrapper" class="relative flex items-center min-w-0 mt-0.5">
+                    <h1 id="full-panel-title" class="text-xs font-bold text-blue-950 truncate leading-none">Detail Kartu</h1>
+                    <input type="text" id="full-panel-title-input" class="hidden title-inline-input text-xs font-bold tracking-tight text-blue-950" spellcheck="false" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. KARTU JUMLAH (UNGU) -->
+              <div id="header-qty-card" class="group flex shrink-0 items-center gap-2 px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50/70 hover:bg-purple-100/70 hover:border-purple-300 transition-all cursor-pointer shadow-2xs text-left" title="Klik untuk fokus ubah jumlah pcs">
+                <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-purple-100/80 text-purple-700 group-hover:bg-purple-200/80 transition-colors">
+                  <i data-lucide="layers" class="h-4 w-4"></i>
+                </div>
+                <div class="flex flex-col select-none">
+                  <span class="text-[9px] font-bold uppercase tracking-wider text-purple-700/80 leading-none">Jumlah</span>
+                  <span id="header-qty-display" class="text-xs font-bold text-purple-950 mt-0.5 leading-none">0 pcs</span>
+                </div>
+              </div>
+
+              <!-- 3. KARTU DEADLINE (AMBER) -->
+              <button type="button" id="deadline-card" class="group flex shrink-0 items-center gap-2 px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50/70 hover:bg-amber-100 hover:border-amber-300 transition-all cursor-pointer shadow-2xs text-left" title="Klik untuk mengatur batas waktu (deadline)">
+                <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-100/80 text-amber-700 group-hover:bg-amber-200/80 transition-colors">
+                  <i data-lucide="calendar-clock" class="h-4 w-4"></i>
+                </div>
+                <div class="flex flex-col select-none">
+                  <span class="text-[9px] font-bold uppercase tracking-wider text-amber-700/80 leading-none">Deadline</span>
+                  <span id="deadline-display" class="text-xs font-bold text-amber-950 mt-0.5 leading-none">17 Okt 2026 | 15:00 WIB</span>
+                </div>
+              </button>
+
+              <!-- 4. KARTU PROGRES SUBTASK (EMERALD) -->
+              <div id="header-subtask-card" class="group flex shrink-0 items-center gap-2 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/70 hover:border-emerald-300 transition-all cursor-pointer shadow-2xs text-left" title="Status progres checklist subtask">
+                <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-emerald-100/80 text-emerald-700 group-hover:bg-emerald-200/80 transition-colors">
+                  <i data-lucide="check-check" class="h-4 w-4"></i>
+                </div>
+                <div class="flex flex-col select-none">
+                  <span class="text-[9px] font-bold uppercase tracking-wider text-emerald-700/80 leading-none">Progres Subtask</span>
+                  <span id="header-subtask-display" class="text-xs font-bold text-emerald-950 mt-0.5 leading-none">0/0 Selesai</span>
+                </div>
+              </div>
+
+              <!-- 5. KARTU PROSES (ROSE - KLIK & SCROLL RODA MOUSE) -->
+              <button type="button" id="header-process-card" class="group flex shrink-0 items-center gap-2 px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50/70 hover:bg-rose-100/70 hover:border-rose-300 transition-all cursor-ns-resize shadow-2xs text-left" title="Klik untuk pilih status, atau scroll mouse wheel untuk mengubah urutan proses">
+                <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-rose-100/80 text-rose-700 group-hover:bg-rose-200/80 transition-colors">
+                  <i data-lucide="sliders-horizontal" class="h-4 w-4"></i>
+                </div>
+                <div class="flex flex-col select-none">
+                  <span class="text-[9px] font-bold uppercase tracking-wider text-rose-700/80 leading-none">Proses</span>
+                  <div class="flex items-center gap-1 mt-0.5">
+                    <span id="header-process-display" class="text-xs font-bold text-rose-950 leading-none">Ditulis</span>
+                    <i data-lucide="chevrons-up-down" class="h-3 w-3 text-rose-500"></i>
+                  </div>
+                </div>
+              </button>
+
+              <!-- 6. KARTU ATTACHMENT (SKY) -->
+              <button type="button" id="header-attachment-card" class="group flex shrink-0 items-center gap-2 px-3 py-1.5 rounded-lg border border-sky-200 bg-sky-50/70 hover:bg-sky-100/70 hover:border-sky-300 transition-all cursor-pointer shadow-2xs text-left" title="Klik untuk kelola berkas lampiran">
+                <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-sky-100/80 text-sky-700 group-hover:bg-sky-200/80 transition-colors">
+                  <i data-lucide="paperclip" class="h-4 w-4"></i>
+                </div>
+                <div class="flex flex-col select-none">
+                  <span class="text-[9px] font-bold uppercase tracking-wider text-sky-700/80 leading-none">Attachment</span>
+                  <span id="header-attachment-display" class="text-xs font-bold text-sky-950 mt-0.5 leading-none">0 File</span>
+                </div>
+              </button>
+
+            </div>
+          </div>
+
+          <!-- RUANG KERJA UTAMA: DIBAGI 3 KOLOM RASIO 4 : 4 : 3 -->
+          <div class="flex-1 flex flex-col md:flex-row overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs min-h-0">
+            
+            <!-- KOLOM 1 (PROPORSI 4): JUDUL, JUMLAH & DESKRIPSI (BORDER DESKRIPSI DIHAPUS) -->
+            <div class="col-prop-4 border-b md:border-b-0 md:border-r border-gray-200 p-4 md:p-5 flex flex-col justify-between overflow-y-auto custom-scrollbar bg-slate-50/30">
+              <div class="flex flex-col gap-4">
+                
+                <!-- Judul & Kuantitas -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200/70">
+                  <div class="min-w-0 flex-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Nama Produk</span>
+                    <h2 id="full-panel-target-name" class="text-lg md:text-xl font-black text-gray-900 mt-0.5 leading-snug break-words">Nama Item</h2>
+                  </div>
+
+                  <!-- Interaktif Stepper & Input Pcs: Border form dihapus dan kursor kedip otomatis di sisi kanan -->
+                  <div class="shrink-0 flex items-center gap-2">
+                    <div id="pcs-stepper-box" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 hover:bg-blue-100/80 px-2.5 py-1.5 text-xs font-extrabold text-blue-700 border border-blue-200 hover:border-blue-300 shadow-2xs transition-colors cursor-ns-resize select-none" title="Scroll mouse wheel atau klik untuk mengetik angka">
+                      <i data-lucide="layers" class="h-4 w-4 text-blue-600 shrink-0"></i>
+                      <div class="flex items-center">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" id="full-panel-pcs-input" value="0" class="w-16 bg-transparent text-right font-black text-blue-900 border-none outline-none focus:outline-none focus:ring-0 p-0 cursor-text caret-blue-600" />
+                        <span class="ml-1 text-xs font-bold text-blue-700">pcs</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tampilan Murni Teks Deskripsi (Tanpa Border) & Ikon Pensil Modal -->
+                <div class="flex flex-col gap-2 flex-1 min-h-0">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-gray-700">
+                      <i data-lucide="file-text" class="h-3.5 w-3.5 text-blue-600"></i>
+                      <span>Deskripsi & Catatan Pekerjaan</span>
+                    </div>
+
+                    <!-- Tombol Edit Deskripsi -->
+                    <button type="button" id="btn-open-edit-desc" class="group flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 border border-blue-200 transition shadow-2xs" title="Edit Deskripsi">
+                      <i data-lucide="pencil" class="h-3.5 w-3.5 transition-transform group-hover:scale-110"></i>
+                      <span>Edit</span>
+                    </button>
+                  </div>
+
+                  <!-- Wadah Murni Teks Tanpa Border -->
+                  <div id="desc-text-wrapper" class="w-full bg-transparent p-1 min-h-[140px] max-h-[260px] overflow-y-auto custom-scrollbar">
+                    <div id="full-panel-desc-display" class="break-words text-xs text-gray-700 leading-relaxed space-y-1"></div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- FOOTER AKSI BAWAH KOLOM 1: Hapus Abu-abu (Kiri) & Selesaikan Pekerjaan (Kanan) -->
+              <div class="pt-3 border-t border-gray-200/60 mt-4 flex items-center justify-between gap-2">
+                <button type="button" id="btn-footer-delete" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 shadow-2xs transition" title="Hapus Pekerjaan">
+                  <i data-lucide="trash-2" class="h-3.5 w-3.5 text-gray-500"></i>
+                  <span>Hapus</span>
+                </button>
+
+                <button type="button" id="btn-footer-complete" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition" title="Selesaikan Pekerjaan">
+                  <i data-lucide="check-circle" id="btn-footer-complete-icon" class="h-3.5 w-3.5"></i>
+                  <span id="btn-footer-complete-text">Selesaikan Pekerjaan</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- KOLOM 2 (PROPORSI 4): SUBTASK DENGAN CHECKLIST -->
+            <div class="col-prop-4 border-b md:border-b-0 md:border-r border-gray-200 p-4 md:p-5 flex flex-col overflow-hidden min-h-0 bg-white">
+              <div class="flex-1 flex flex-col min-h-0 gap-2.5">
+                <div class="flex items-center justify-between">
+                  <label class="text-xs font-bold uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
+                    <i data-lucide="list-checks" class="h-4 w-4 text-blue-600"></i>
+                    <span>Subtask (Checklist)</span>
+                  </label>
+                  <span id="subtask-progress-label" class="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">0/0 selesai</span>
+                </div>
+
+                <!-- Input Subtask Baru -->
+                <form id="form-add-subtask" class="flex gap-1.5">
+                  <input type="text" id="input-new-subtask" placeholder="Tambah langkah kerja..." class="flex-1 min-w-0 rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                  <button type="submit" class="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition shrink-0 shadow-2xs" title="Tambah Subtask">
+                    <i data-lucide="plus" class="h-3.5 w-3.5"></i>
+                    <span class="hidden sm:inline">Tambah</span>
+                  </button>
+                </form>
+
+                <!-- Daftar Subtask -->
+                <div id="subtasks-container" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1.5 pr-1 mt-1 min-h-[160px]">
+                  <!-- Rendered dynamically -->
+                </div>
+              </div>
+            </div>
+
+            <!-- KOLOM 3 (PROPORSI 3): FOTO PRODUK (5:7) DENGAN TRIGGER PREVIEW GAMBAR -->
+            <div class="col-prop-3 bg-gray-50/70 p-3 sm:p-4 flex flex-col items-center justify-center overflow-hidden min-h-0">
+              <div class="w-full h-full flex flex-col items-center justify-center min-h-0">
+                <div id="btn-preview-main-img" class="group relative max-h-full max-w-full flex items-center justify-center aspect-[5/7] rounded-xl overflow-hidden shadow-sm border border-gray-200 bg-white cursor-pointer" title="Klik untuk memperbesar & preview foto produk">
+                  <img id="full-panel-img" src="" alt="Foto Produk" class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105" />
+                  
+                  <!-- Overlay petunjuk klik untuk preview -->
+                  <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none z-10">
+                    <span class="bg-white/95 text-gray-900 text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1.5">
+                      <i data-lucide="zoom-in" class="h-3.5 w-3.5 text-blue-600"></i>
+                      <span>Preview Gambar</span>
+                    </span>
+                  </div>
+
+                  <div class="absolute bottom-2 right-2 rounded-md bg-black/80 px-2 py-0.5 text-xs font-extrabold text-white backdrop-blur-xs border border-white/20 z-10">
+                    <span id="full-panel-badge-img">0 pcs</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
+        <!-- KONTEN HOME: DERET KARTU -->
+        <div id="home-content-container" class="flex-1 flex flex-col justify-start overflow-visible pt-1">
+          <section id="cards-container">
+            
+            <!-- TOMBOL TAMBAH DATA -->
+            <div id="btn-add-card" class="add-card-item group">
+              <div class="add-card-frame">
+                <div class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-600 transition-transform duration-200 group-hover:scale-110">
+                  <i data-lucide="plus" class="h-5 w-5"></i>
+                </div>
+              </div>
+              <div class="card-meta-outside">
+                <p class="truncate text-xs font-semibold text-blue-600">Tambah Data</p>
+                <p class="text-[11px] font-medium text-blue-400">Input produk baru</p>
+              </div>
+            </div>
+
+          </section>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- PANEL / MODAL PREVIEW GAMBAR (MODAL 60% LEBAR x 90% TINGGI, LATAR GELAP BLUR, ZOOM & PAN) -->
+  <div id="modal-image-preview" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-200 p-2 sm:p-4">
+    
+    <!-- Kotak Modal: Selebar 60% Layar & Setinggi 90% Tinggi Layar, Latar Putih Bersih -->
+    <div id="image-preview-modal-box" class="w-[95vw] md:w-[60vw] h-[90vh] max-h-[90vh] rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden flex flex-col scale-95 transition-transform duration-200">
+      
+      <!-- Header Toolbar Preview Gambar -->
+      <div class="flex h-12 shrink-0 items-center justify-between border-b border-gray-100 px-4 bg-white select-none">
+        
+        <!-- Info File Gambar -->
+        <div class="flex items-center gap-2.5 min-w-0 pr-2">
+          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 shrink-0">
+            <i data-lucide="image" class="h-4 w-4"></i>
+          </div>
+          <div class="flex flex-col min-w-0">
+            <h3 id="image-preview-title" class="text-xs font-bold text-gray-900 truncate">Preview Gambar</h3>
+            <p id="image-preview-info" class="text-[10px] text-gray-400 truncate">Gunakan scroll mouse untuk Zoom dan drag untuk Pan</p>
+          </div>
+        </div>
+
+        <!-- Kontrol Zoom & Pan -->
+        <div class="flex items-center gap-1.5 bg-gray-50 border border-gray-200/80 rounded-lg p-1">
+          <button type="button" id="btn-zoom-out" class="p-1 rounded text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition" title="Zoom Out (-)">
+            <i data-lucide="zoom-out" class="h-4 w-4"></i>
+          </button>
+
+          <span id="zoom-level-text" class="text-[11px] font-bold text-gray-700 min-w-[42px] text-center select-none">100%</span>
+
+          <button type="button" id="btn-zoom-in" class="p-1 rounded text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition" title="Zoom In (+)">
+            <i data-lucide="zoom-in" class="h-4 w-4"></i>
+          </button>
+
+          <div class="h-4 w-[1px] bg-gray-200 mx-0.5"></div>
+
+          <button type="button" id="btn-zoom-reset" class="px-2 py-0.5 rounded text-[10px] font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition" title="Reset Zoom (1:1)">
+            1:1
+          </button>
+
+          <button type="button" id="btn-zoom-fit" class="px-2 py-0.5 rounded text-[10px] font-bold text-blue-600 hover:bg-blue-50 transition" title="Sesuaikan Layar (Fit)">
+            Fit
+          </button>
+        </div>
+
+        <!-- Tombol Tutup Preview -->
+        <div class="flex items-center gap-1 pl-2">
+          <button type="button" id="btn-close-image-preview" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition" title="Tutup Preview (Esc)">
+            <i data-lucide="x" class="h-5 w-5"></i>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Area Canvas / Viewport Gambar (Latar Putih, Zoom & Pan) -->
+      <div id="image-preview-viewport" class="relative flex-1 w-full h-full overflow-hidden bg-white flex items-center justify-center select-none cursor-grab active:cursor-grabbing">
+        <div id="image-preview-stage" class="absolute flex items-center justify-center origin-center transition-transform duration-75 ease-out">
+          <img id="image-preview-img" src="" alt="Preview Gambar" class="max-w-none pointer-events-none select-none rounded shadow-md border border-gray-100" />
+        </div>
+        
+        <!-- Hint petunjuk navigasi di pojok bawah -->
+        <div class="absolute bottom-3 left-4 bg-white/90 border border-gray-200 px-2.5 py-1 rounded-md text-[10px] text-gray-500 shadow-2xs pointer-events-none backdrop-blur-xs flex items-center gap-1.5">
+          <i data-lucide="mouse-pointer" class="h-3 w-3 text-blue-600"></i>
+          <span>Scroll mouse untuk Zoom • Geser kursor untuk Pan • Klik dua kali untuk reset</span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- MODAL WARNING KONFIRMASI HAPUS -->
+  <div id="modal-delete-warning" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200">
+    <div id="modal-delete-container" class="w-full max-w-sm scale-95 rounded-2xl bg-white p-5 shadow-2xl transition-all duration-200 border border-gray-100">
+      <div class="flex items-start gap-3">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 border border-amber-200 text-amber-600">
+          <i data-lucide="alert-triangle" class="h-5 w-5"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <h3 class="text-sm font-bold text-gray-900">Konfirmasi Hapus Pekerjaan</h3>
+          <p class="text-xs text-gray-500 mt-1 leading-relaxed">
+            Apakah Anda yakin ingin menghapus data pekerjaan <strong id="delete-warning-item-name" class="text-gray-800"></strong>? Tindakan ini bersifat permanen dan tidak dapat dibatalkan.
+          </p>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
+        <button type="button" id="btn-cancel-delete" class="rounded-lg border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 transition shadow-2xs">
+          Batal
+        </button>
+        <button type="button" id="btn-confirm-delete" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-400 bg-gray-800 hover:bg-gray-900 text-white px-3.5 py-1.5 text-xs font-semibold shadow-xs transition">
+          <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+          <span>Ya, Hapus Data</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PEMILIHAN TANGGAL & JAM REALTIME -->
+  <div id="modal-deadline-picker" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200">
+    <div id="modal-deadline-container" class="w-full max-w-md scale-95 rounded-2xl bg-white p-5 shadow-2xl transition-all duration-200 border border-gray-100 flex flex-col gap-3.5">
+      
+      <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-50 text-amber-700 border border-amber-200">
+            <i data-lucide="calendar-clock" class="h-4 w-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-gray-900">Pilih Batas Waktu (Deadline)</h3>
+          </div>
+        </div>
+        <button id="btn-close-deadline-modal" type="button" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition" title="Tutup">
+          <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
+      </div>
+
+      <!-- TAMPILAN TANGGAL -->
+      <div class="rounded-xl border border-gray-200 bg-gray-50/60 p-3">
+        <div class="flex items-center justify-between mb-2">
+          <button type="button" id="cal-prev-month" class="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition" title="Bulan Sebelumnya">
+            <i data-lucide="chevron-left" class="h-4 w-4"></i>
+          </button>
+          
+          <div class="flex items-center gap-2">
+            <span id="cal-month-year-label" class="text-xs font-bold text-gray-800 tracking-wide">Oktober 2026</span>
+            <button type="button" id="cal-btn-today" class="text-[10px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-md border border-blue-200 transition">
+              Hari Ini
+            </button>
+          </div>
+
+          <button type="button" id="cal-next-month" class="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-100 transition" title="Bulan Berikutnya">
+            <i data-lucide="chevron-right" class="h-4 w-4"></i>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-7 gap-1 text-center mb-1 text-[11px] font-bold text-gray-400">
+          <div class="text-rose-500">Min</div>
+          <div>Sen</div>
+          <div>Sel</div>
+          <div>Rab</div>
+          <div>Kam</div>
+          <div>Jum</div>
+          <div>Sab</div>
+        </div>
+
+        <div id="cal-days-grid" class="grid grid-cols-7 gap-1"></div>
+      </div>
+
+      <!-- KARTU PEMILIHAN JAM TUNGGAL -->
+      <div id="time-scroll-box" class="rounded-xl border border-amber-200/90 bg-amber-50/60 p-3.5 flex flex-col items-center justify-center gap-2.5 select-none cursor-ns-resize transition" title="Scroll mouse wheel untuk ±15 menit, tahan Shift untuk ±1 jam">
+        
+        <div class="flex items-center gap-1.5 text-xs font-bold text-amber-950 w-full justify-start">
+          <i data-lucide="clock" class="h-3.5 w-3.5 text-amber-600"></i>
+          <span>Pemilihan Jam Deadline</span>
+        </div>
+
+        <div class="flex items-center justify-center gap-2 my-1">
+          <div class="flex flex-col items-center">
+            <span id="display-picker-hour" class="text-3xl font-black text-gray-900 tracking-tight">15</span>
+            <span class="text-[9px] uppercase font-bold text-gray-400">Jam</span>
+          </div>
+          
+          <span class="text-3xl font-black text-amber-500 pb-3">:</span>
+
+          <div class="flex flex-col items-center">
+            <span id="display-picker-min" class="text-3xl font-black text-gray-900 tracking-tight">00</span>
+            <span class="text-[9px] uppercase font-bold text-gray-400">Menit</span>
+          </div>
+
+          <div class="ml-2 pl-2 border-l border-amber-200 flex flex-col items-start justify-center">
+            <span class="rounded bg-amber-200/80 px-1.5 py-0.5 text-[10px] font-extrabold text-amber-900">WIB</span>
+            <span class="text-[9px] text-amber-700/70 mt-0.5">Realtime</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-center gap-1.5 w-full pt-2 border-t border-amber-200/60">
+          <button type="button" id="btn-step-minus-60" class="px-2.5 py-1 text-[10px] font-bold rounded-md bg-white hover:bg-amber-100 text-gray-700 border border-amber-200/80 transition shadow-2xs">-1 Jam</button>
+          <button type="button" id="btn-step-minus-15" class="px-2.5 py-1 text-[10px] font-bold rounded-md bg-white hover:bg-amber-100 text-gray-700 border border-amber-200/80 transition shadow-2xs">-15 Mnt</button>
+          <button type="button" id="btn-step-plus-15" class="px-2.5 py-1 text-[10px] font-bold rounded-md bg-amber-500 hover:bg-amber-600 text-white transition shadow-2xs">+15 Mnt</button>
+          <button type="button" id="btn-step-plus-60" class="px-2.5 py-1 text-[10px] font-bold rounded-md bg-amber-500 hover:bg-amber-600 text-white transition shadow-2xs">+1 Jam</button>
+        </div>
+
+        <div id="time-warning-box" class="hidden items-center gap-1.5 rounded-lg bg-rose-50 border border-rose-200 p-2 text-[11px] font-medium text-rose-700 w-full">
+          <i data-lucide="alert-circle" class="h-3.5 w-3.5 text-rose-500 shrink-0"></i>
+          <span id="time-warning-text">Waktu tidak boleh sebelum waktu realtime dibulatkan ke atas!</span>
+        </div>
+      </div>
+
+      <!-- Ringkasan & Tombol Simpan -->
+      <div class="flex items-center justify-between border-t border-gray-100 pt-3">
+        <div class="flex flex-col min-w-0 pr-2">
+          <span class="text-[9px] font-bold uppercase tracking-wider text-gray-400 leading-none">Batas Waktu Terpilih</span>
+          <span id="modal-deadline-preview" class="text-xs font-bold text-gray-900 mt-1 truncate leading-none">17 Oktober 2026 | 15:00 WIB</span>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <button type="button" id="btn-cancel-deadline-modal" class="rounded-lg border border-gray-200 px-3.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition">
+            Batal
+          </button>
+          <button type="button" id="btn-save-deadline" class="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 active:bg-amber-700 px-4 py-1.5 text-xs font-bold text-white shadow-xs transition">
+            <i data-lucide="check" class="h-3.5 w-3.5"></i>
+            <span>Simpan</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL EDIT DESKRIPSI -->
+  <div id="modal-edit-desc" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="w-full max-w-lg scale-95 rounded-2xl bg-white p-5 shadow-2xl transition-all duration-200 border border-gray-100 flex flex-col gap-3">
+      
+      <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-200">
+            <i data-lucide="file-text" class="h-4 w-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-gray-900">Edit Deskripsi & Catatan</h3>
+            <p class="text-[11px] text-gray-400">Format teks: Bold, Italic, Underline, & Auto-Bullet</p>
+          </div>
+        </div>
+        <button id="btn-close-edit-desc" type="button" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition" title="Tutup">
+          <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
+      </div>
+
+      <!-- Toolbar Format Teks -->
+      <div class="flex items-center justify-between gap-1 p-1.5 rounded-lg bg-gray-50 border border-gray-200/80">
+        <div class="flex items-center gap-1">
+          <button type="button" id="btn-format-bold" class="h-7 w-7 rounded flex items-center justify-center font-black text-xs text-gray-700 hover:bg-gray-200 transition" title="Tebal (Ctrl+B)">
+            B
+          </button>
+          <button type="button" id="btn-format-italic" class="h-7 w-7 rounded flex items-center justify-center italic font-serif text-xs text-gray-700 hover:bg-gray-200 transition" title="Miring (Ctrl+I)">
+            I
+          </button>
+          <button type="button" id="btn-format-underline" class="h-7 w-7 rounded flex items-center justify-center underline text-xs font-semibold text-gray-700 hover:bg-gray-200 transition" title="Garis Bawah (Ctrl+U)">
+            U
+          </button>
+          <div class="h-4 w-[1px] bg-gray-300 mx-1"></div>
+          <button type="button" id="btn-format-bullet" class="h-7 px-2 rounded flex items-center gap-1 text-xs font-bold text-gray-700 hover:bg-gray-200 transition" title="Sisipkan Bullet Point (•)">
+            <span class="text-sm leading-none">•</span>
+            <span class="text-[10px]">Poin</span>
+          </button>
+        </div>
+        <span class="text-[10px] text-gray-400 hidden sm:inline">Ketik "-" lalu spasi untuk membuat •</span>
+      </div>
+
+      <!-- Area Teks ContentEditable -->
+      <div class="flex flex-col gap-1">
+        <div id="modal-desc-editor" contenteditable="true" data-placeholder="Tuliskan spesifikasi produk, instruksi pengerjaan, atau catatan penting..." class="rich-editor w-full min-h-[180px] max-h-[300px] overflow-y-auto custom-scrollbar rounded-xl border border-gray-200 p-3.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white transition shadow-2xs leading-relaxed"></div>
+      </div>
+
+      <div class="flex items-center justify-between border-t border-gray-100 pt-3">
+        <span class="text-[10px] text-gray-400">Mendukung Enter otomatis melanjutkan poin</span>
+        <div class="flex items-center gap-2">
+          <button type="button" id="btn-cancel-edit-desc" class="rounded-lg border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition shadow-2xs">
+            Batal
+          </button>
+          <button type="button" id="btn-save-edit-desc" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 text-xs font-bold shadow-xs transition">
+            <i data-lucide="check" class="h-3.5 w-3.5"></i>
+            <span>Simpan Perubahan</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PILIHAN STATUS PROSES -->
+  <div id="modal-process-picker" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="w-full max-w-sm scale-95 rounded-2xl bg-white p-5 shadow-2xl transition-all duration-200 border border-gray-100 flex flex-col gap-3">
+      
+      <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-50 text-rose-600 border border-rose-200">
+            <i data-lucide="sliders-horizontal" class="h-4 w-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-gray-900">Ubah Tahapan Proses</h3>
+            <p class="text-[11px] text-gray-400">Pilih status proses pekerjaan saat ini</p>
+          </div>
+        </div>
+        <button id="btn-close-process-modal" type="button" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition" title="Tutup">
+          <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
+      </div>
+
+      <div id="process-options-list" class="grid grid-cols-2 gap-2 my-1"></div>
+
+    </div>
+  </div>
+
+  <!-- MODAL PENGELOLA ATTACHMENT -->
+  <div id="modal-attachment-manager" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="w-full max-w-md scale-95 rounded-2xl bg-white p-5 shadow-2xl transition-all duration-200 border border-gray-100 flex flex-col gap-3">
+      
+      <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-50 text-sky-600 border border-sky-200">
+            <i data-lucide="paperclip" class="h-4 w-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-gray-900">Berkas Lampiran (Attachment)</h3>
+            <p class="text-[11px] text-gray-400">Daftar lampiran berkas dan form unggah</p>
+          </div>
+        </div>
+        <button id="btn-close-attachment-modal" type="button" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition" title="Tutup">
+          <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
+      </div>
+
+      <!-- DAFTAR LAMPIRAN BERKAS & FORM DI BAWAHNYA -->
+      <div class="max-h-[280px] overflow-y-auto custom-scrollbar flex flex-col gap-2 pr-0.5 my-1">
+        
+        <div id="attachment-list-container" class="flex flex-col gap-1.5"></div>
+
+        <div id="attachment-upload-box" class="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-dashed border-sky-300 bg-sky-50/50 hover:bg-sky-50 transition">
+          <div class="flex items-center gap-2 min-w-0">
+            <i data-lucide="upload-cloud" class="h-5 w-5 text-sky-600 shrink-0"></i>
+            <div class="flex flex-col min-w-0">
+              <span class="text-xs font-semibold text-sky-900 truncate">Tambah berkas baru</span>
+              <span class="text-[10px] text-sky-600/80 truncate">Mendukung gambar, PDF, DXF, CDR</span>
+            </div>
+          </div>
+          <button type="button" id="btn-trigger-upload-attachment" class="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition shadow-2xs shrink-0">
+            Pilih File
+          </button>
+          <input type="file" id="input-attachment-file" class="hidden" multiple />
+        </div>
+
+      </div>
+
+      <div class="flex items-center justify-end border-t border-gray-100 pt-3">
+        <button type="button" id="btn-done-attachment" class="rounded-lg bg-gray-800 hover:bg-gray-900 text-white px-4 py-1.5 text-xs font-bold transition shadow-xs">
+          Selesai
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL FORM INPUT DATA BARU -->
+  <div id="modal-add-card" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200">
+    <div id="modal-container" class="w-full max-w-sm scale-95 rounded-2xl bg-white p-5 shadow-2xl transition-all duration-200">
+      
+      <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+            <i data-lucide="plus" class="h-4 w-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-gray-900">Tambah Data Baru</h3>
+            <p class="text-[11px] text-gray-400">Simpan ke IndexedDB lokal</p>
+          </div>
+        </div>
+        <button id="btn-close-modal" type="button" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition" title="Tutup">
+          <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
+      </div>
+
+      <form id="form-add-card" class="mt-4 flex flex-col gap-3">
+        <div>
+          <label for="input-item-name" class="block text-xs font-semibold text-gray-700">Nama Barang</label>
+          <input type="text" id="input-item-name" required placeholder="Contoh: Plat Akrilik 5mm" class="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+        </div>
+
+        <div>
+          <label for="input-item-qty" class="block text-xs font-semibold text-gray-700">Jumlah (Pcs)</label>
+          <div class="relative mt-1 flex items-center">
+            <input type="number" id="input-item-qty" required min="1" placeholder="Contoh: 250" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 pr-12" />
+            <span class="absolute right-3 text-xs font-bold text-blue-600">PCS</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Foto Barang (Drag & Drop)</label>
+          
+          <div id="dropzone" class="dropzone-area flex flex-col items-center justify-center rounded-xl p-3 text-center cursor-pointer bg-gray-50/60 hover:bg-gray-50">
+            <div id="dropzone-prompt" class="flex flex-col items-center">
+              <i data-lucide="upload-cloud" class="h-7 w-7 text-blue-500 mb-1"></i>
+              <p class="text-xs font-medium text-gray-700">Tarik gambar ke sini, atau <span class="text-blue-600 underline">pilih file</span></p>
+              <p class="text-[10px] text-gray-400 mt-0.5">Mendukung PNG, JPG, WebP</p>
+            </div>
+
+            <div id="dropzone-preview" class="hidden flex-col items-center gap-1.5">
+              <div class="h-20 w-16 rounded-md overflow-hidden border border-gray-200 bg-white">
+                <img id="preview-img-tag" src="" alt="Preview" class="h-full w-full object-cover" />
+              </div>
+              <span id="preview-filename" class="text-[10px] text-gray-500 max-w-[180px] truncate">nama-file.jpg</span>
+              <button type="button" id="btn-remove-file" class="text-[10px] text-red-500 hover:underline">Hapus foto</button>
+            </div>
+
+            <input type="file" id="file-input" accept="image/*" class="hidden" />
+          </div>
+        </div>
+
+        <div class="mt-2 flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
+          <button type="button" id="btn-cancel-modal" class="rounded-lg border border-gray-200 px-3.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition">
+            Batal
+          </button>
+          <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-blue-700 transition">
+            <i data-lucide="check" class="h-3.5 w-3.5"></i>
+            <span>Simpan ke Database</span>
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const initIcons = () => window.lucide?.createIcons();
+    initIcons();
+
+    /* ===== Status Proses Pilihan ===== */
+    const PROCESS_LIST = ["Ditulis", "Setting", "Cutting", "Print", "Pasang", "Finishing", "Packing", "Menunggu Kirim"];
+
+    /* ===== IndexedDB ===== */
+    const STORE = "items";
+    let db;
+    let active = null;
+
+    const openDatabase = () => new Promise((resolve, reject) => {
+      const req = indexedDB.open("laserworks_db", 1);
+      req.onupgradeneeded = () => req.result.createObjectStore(STORE, { keyPath: "id", autoIncrement: true });
+      req.onsuccess = () => { db = req.result; resolve(); };
+      req.onerror = () => reject(req.error);
+    });
+    const run = (mode, fn) => new Promise((resolve, reject) => {
+      const req = fn(db.transaction(STORE, mode).objectStore(STORE));
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    const dbAll = () => run("readonly", (s) => s.getAll());
+    const dbAdd = (item) => run("readwrite", (s) => s.add(item));
+    const dbSave = (item) => run("readwrite", (s) => s.put(item));
+    const dbDelete = (id) => run("readwrite", (s) => s.delete(Number(id)));
+
+    /* ===== Helper umum ===== */
+    const NO_PHOTO = "https://placehold.co/300x420/f8fafc/94a3b8?text=Tanpa+Foto";
+    const MONTHS = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const SHORT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+    const fmtQty = (q) => `${Number(q).toLocaleString("id-ID")} pcs`;
+    const pad = (n) => String(n).padStart(2, "0");
+    const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+
+    function toggleModal(modal, open) {
+      const box = modal.firstElementChild;
+      modal.classList.toggle("opacity-0", !open);
+      modal.classList.toggle("pointer-events-none", !open);
+      box.classList.toggle("scale-95", !open);
+      box.classList.toggle("scale-100", open);
+    }
+    function bindModal(modal, ...closeBtns) {
+      const close = () => toggleModal(modal, false);
+      closeBtns.forEach((b) => b.addEventListener("click", close));
+      modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+    }
+
+    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+    // Deskripsi disimpan sebagai HTML: hanya tag format dasar yang dipertahankan, atribut dibuang
+    const ALLOWED_TAGS = new Set(["B", "I", "U", "STRONG", "EM", "BR", "DIV", "P", "SPAN", "UL", "OL", "LI"]);
+    function sanitizeHTML(html) {
+      const tpl = document.createElement("template");
+      tpl.innerHTML = html;
+      const clean = (node) => [...node.children].forEach((el) => {
+        clean(el);
+        if (!ALLOWED_TAGS.has(el.tagName)) {
+          if (["SCRIPT", "STYLE", "IFRAME", "OBJECT", "EMBED"].includes(el.tagName)) el.remove();
+          else el.replaceWith(...el.childNodes);
+        } else [...el.attributes].forEach((a) => el.removeAttribute(a.name));
+      });
+      clean(tpl.content);
+      return tpl.innerHTML;
+    }
+
+    /* ===== Elemen ===== */
+    const sidebar = $("sidebar"), sidebarToggle = $("btn-sidebar-toggle");
+    const pageButtons = document.querySelectorAll(".nav-page-btn");
+    const headerPageTitleBtn = $("header-page-title-btn");
+    const pageHeaderCard = $("page-header-card"), homeContent = $("home-content-container"), fullPagePanel = $("full-page-panel");
+    const cardsContainer = $("cards-container"), btnAddCard = $("btn-add-card");
+    const fullTitle = $("full-panel-title"), titleInput = $("full-panel-title-input"), fullTargetName = $("full-panel-target-name");
+    const pcsInput = $("full-panel-pcs-input"), pcsBadge = $("full-panel-badge-img");
+    
+    /* Header Cards Elements di Panel Pekerjaan */
+    const headerQtyDisplay = $("header-qty-display");
+    const deadlineDisplay = $("deadline-display");
+    const headerSubtaskDisplay = $("header-subtask-display");
+    const headerProcessDisplay = $("header-process-display");
+    const headerAttachmentDisplay = $("header-attachment-display");
+
+    /* Header Utama: Metadata sederhana saat di Home */
+    const headerActiveMeta = $("header-active-meta");
+    const headerCardTitle = $("header-card-title");
+    const headerMetaQty = $("header-meta-qty");
+    const headerMetaDeadline = $("header-meta-deadline");
+    const headerMetaSubtask = $("header-meta-subtask");
+    const headerMetaProcess = $("header-meta-process");
+    const headerMetaAttachment = $("header-meta-attachment");
+
+    /* Header Search Elements */
+    const btnSearchToggle = $("btn-header-search-toggle");
+    const searchBar = $("header-search-bar");
+    const searchInput = $("header-search-input");
+    const btnClearSearch = $("btn-clear-search");
+    const btnCloseSearch = $("btn-close-search");
+
+    /* Preview Gambar Elements */
+    const modalImagePreview = $("modal-image-preview");
+    const imagePreviewImg = $("image-preview-img");
+    const imagePreviewTitle = $("image-preview-title");
+    const imagePreviewInfo = $("image-preview-info");
+    const imagePreviewViewport = $("image-preview-viewport");
+    const imagePreviewStage = $("image-preview-stage");
+    const zoomLevelText = $("zoom-level-text");
+
+    const completeBtn = $("btn-footer-complete");
+    const modalDelete = $("modal-delete-warning"), modalDeadline = $("modal-deadline-picker"), modalAdd = $("modal-add-card");
+    const modalEditDesc = $("modal-edit-desc"), descEditor = $("modal-desc-editor"), descDisplay = $("full-panel-desc-display");
+    const modalProcess = $("modal-process-picker"), processOptionsList = $("process-options-list");
+    const modalAttachment = $("modal-attachment-manager"), attachmentList = $("attachment-list-container");
+
+    /* ===== Sidebar & Navigasi ===== */
+    const setSidebar = (open) => {
+      sidebar.classList.toggle("expanded", open);
+      sidebarToggle.setAttribute("aria-expanded", String(open));
+    };
+    sidebarToggle.addEventListener("click", () => setSidebar(!sidebar.classList.contains("expanded")));
+    $("btn-extra-app-launcher").addEventListener("click", (e) => { e.stopPropagation(); setSidebar(false); });
+
+    function setNavActive(key) {
+      pageButtons.forEach((b) => {
+        const on = b.dataset.menu === key;
+        b.classList.toggle("text-blue-600", on);
+        b.classList.toggle("text-gray-900", !on);
+      });
+    }
+
+    function updateMainHeaderMeta(item) {
+      if (!item) {
+        headerActiveMeta.classList.add("hidden");
+        headerActiveMeta.classList.remove("flex");
+        return;
+      }
+
+      headerActiveMeta.classList.remove("hidden");
+      headerActiveMeta.classList.add("flex");
+
+      headerCardTitle.textContent = item.name;
+      headerMetaQty.textContent = fmtQty(item.qty || 1);
+      headerMetaDeadline.textContent = fmtShortDeadline(item.deadline);
+
+      const subtasks = item.subtasks || [];
+      const done = subtasks.filter(s => s.done).length;
+      headerMetaSubtask.textContent = `${done}/${subtasks.length} Selesai`;
+
+      headerMetaProcess.textContent = item.process || "Ditulis";
+      const attCount = (item.attachments || []).length;
+      headerMetaAttachment.textContent = `${attCount} File`;
+    }
+
+    pageButtons.forEach((btn) => btn.addEventListener("click", () => {
+      const key = btn.dataset.menu;
+      if (key === "home") return showHomePage();
+      fullPagePanel.classList.add("hidden");
+      homeContent.classList.add("hidden");
+      pageHeaderCard.classList.remove("hidden");
+      headerPageTitleBtn.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+      updateMainHeaderMeta(null);
+      setNavActive(key);
+    }));
+
+    function showHomePage() {
+      fullPagePanel.classList.add("hidden");
+      homeContent.classList.remove("hidden");
+      pageHeaderCard.classList.add("hidden");
+      headerPageTitleBtn.textContent = "Home";
+      exitInlineEditTitle(false);
+      setNavActive("home");
+      if (active) {
+        updateMainHeaderMeta(active);
+        highlightActiveCard(active.id);
+      } else {
+        updateMainHeaderMeta(null);
+      }
+      applySearchFilter();
+    }
+    headerPageTitleBtn.addEventListener("click", showHomePage);
+    $("btn-back-to-home").addEventListener("click", showHomePage);
+
+    function highlightActiveCard(id) {
+      document.querySelectorAll(".stat-card-item").forEach((c) => {
+        const isCurrent = Number(c.dataset.cardId) === Number(id);
+        c.classList.toggle("card-active", isCurrent);
+      });
+    }
+
+    /* ===== Sistem Pencarian (Nama, Jumlah: "angka pcs", Deadline: "angka bulan") ===== */
+    function getItemSearchText(item) {
+      const name = (item.name || "").toLowerCase();
+      const qtyStr = `${item.qty} pcs`.toLowerCase();
+      const qtyFmtStr = `${Number(item.qty).toLocaleString("id-ID")} pcs`.toLowerCase();
+      
+      let deadlineStr = "";
+      if (item.deadline) {
+        const dt = new Date(item.deadline);
+        if (!isNaN(dt.getTime())) {
+          const d = dt.getDate();
+          const mFull = MONTHS[dt.getMonth()].toLowerCase();
+          const mShort = SHORT_MONTHS[dt.getMonth()].toLowerCase();
+          const y = dt.getFullYear();
+          // Mencakup variasi: "17 oktober", "17 okt", "17 oktober 2026", dll.
+          deadlineStr = `${d} ${mFull} ${d} ${mShort} ${mFull} ${mShort} ${d} ${mFull} ${y} ${d} ${mShort} ${y}`;
+        }
+      }
+      return `${name} | ${qtyStr} | ${qtyFmtStr} | ${deadlineStr}`;
+    }
+
+    function applySearchFilter() {
+      const query = searchInput.value.trim().toLowerCase();
+      const cards = cardsContainer.querySelectorAll(".stat-card-item");
+      let visibleCount = 0;
+
+      cards.forEach((card) => {
+        const text = card.dataset.searchable || "";
+        const match = !query || text.includes(query);
+        card.classList.toggle("hidden", !match);
+        if (match) visibleCount++;
+      });
+
+      let noMatchEl = $("search-no-results");
+      if (query && visibleCount === 0) {
+        if (!noMatchEl) {
+          noMatchEl = document.createElement("div");
+          noMatchEl.id = "search-no-results";
+          noMatchEl.className = "col-span-full py-10 flex flex-col items-center justify-center text-center text-gray-400";
+          cardsContainer.insertBefore(noMatchEl, btnAddCard);
+        }
+        noMatchEl.innerHTML = `
+          <i data-lucide="search-x" class="h-8 w-8 mb-2 text-gray-300"></i>
+          <p class="text-xs font-semibold text-gray-600">Tidak ada pekerjaan yang cocok</p>
+          <p class="text-[11px] text-gray-400 mt-0.5">Cari berdasarkan nama, jumlah (${query.includes("pcs") ? query : "17 pcs"}), atau deadline (17 Oktober).</p>
+        `;
+        initIcons();
+      } else if (noMatchEl) {
+        noMatchEl.remove();
+      }
+    }
+
+    // Toggle Search Bar di Header & Auto-fokus Keyboard
+    btnSearchToggle.addEventListener("click", () => {
+      btnSearchToggle.classList.add("hidden");
+      searchBar.classList.remove("hidden");
+      searchBar.classList.add("flex");
+      
+      // Jika sedang berada di detail panel atau menu lain, otomatis alihkan ke Home untuk melihat kartu yang difilter
+      if (!fullPagePanel.classList.contains("hidden") || !pageHeaderCard.classList.contains("hidden")) {
+        showHomePage();
+      }
+
+      setTimeout(() => {
+        searchInput.focus();
+        searchInput.select();
+      }, 50);
+    });
+
+    searchInput.addEventListener("input", () => {
+      const hasText = Boolean(searchInput.value.trim());
+      btnClearSearch.classList.toggle("hidden", !hasText);
+      applySearchFilter();
+    });
+
+    btnClearSearch.addEventListener("click", () => {
+      searchInput.value = "";
+      btnClearSearch.classList.add("hidden");
+      applySearchFilter();
+      searchInput.focus();
+    });
+
+    function closeSearch() {
+      searchInput.value = "";
+      btnClearSearch.classList.add("hidden");
+      searchBar.classList.add("hidden");
+      searchBar.classList.remove("flex");
+      btnSearchToggle.classList.remove("hidden");
+      applySearchFilter();
+    }
+    btnCloseSearch.addEventListener("click", closeSearch);
+
+    /* ===== Kartu Pekerjaan ===== */
+    async function loadCards() {
+      cardsContainer.querySelectorAll(".stat-card-item").forEach((c) => c.remove());
+      const items = await dbAll();
+      items.forEach(createCard);
+      if (active) {
+        const fresh = items.find(i => i.id === active.id);
+        if (fresh) active = fresh;
+        highlightActiveCard(active.id);
+        updateMainHeaderMeta(active);
+      }
+      applySearchFilter();
+      initIcons();
+    }
+
+    function createCard(item) {
+      const card = document.createElement("div");
+      card.className = `stat-card-item group ${item.completed ? "is-completed" : ""}`;
+      card.dataset.cardId = item.id;
+
+      card.innerHTML = `
+        <div class="card-frame shadow-xs">
+          ${item.completed ? `<div class="absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md ring-2 ring-white">
+             <i data-lucide="check" class="h-3.5 w-3.5 stroke-[3]"></i>
+           </div>
+           <div class="absolute inset-0 bg-emerald-500/15 pointer-events-none z-[5]"></div>` : ""}
+          <img src="${item.img || NO_PHOTO}" alt="" class="h-full w-full object-cover" onerror="this.src='${NO_PHOTO}'" />
+          <div class="absolute bottom-2 right-2 rounded-md bg-black/80 px-2 py-0.5 text-[11px] font-extrabold text-white shadow-sm backdrop-blur-xs flex items-center gap-1 border border-white/20 z-10">
+            <span class="card-qty-badge"></span>
+          </div>
+        </div>
+        <div class="card-meta-outside mt-1 space-y-0.5">
+          <div class="flex items-center gap-1 min-w-0">
+            ${item.completed ? '<span class="inline-block h-2 w-2 rounded-full bg-emerald-500 shrink-0"></span>' : ""}
+            <p class="card-meta-name truncate text-xs font-bold text-gray-800"></p>
+          </div>
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="card-meta-qty font-extrabold ${item.completed ? "text-emerald-600" : "text-blue-600"}"></span>
+            <span class="card-meta-process text-[10px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200"></span>
+          </div>
+          <div class="text-[10px] text-gray-500 flex items-center justify-between pt-0.5 border-t border-gray-100">
+            <span class="card-meta-deadline truncate text-amber-700 font-medium"></span>
+            <span class="card-meta-subtask font-semibold text-emerald-700"></span>
+          </div>
+        </div>`;
+      fillCard(card, item);
+
+      card.addEventListener("click", () => {
+        active = item;
+        highlightActiveCard(item.id);
+        updateMainHeaderMeta(item);
+      });
+      card.addEventListener("dblclick", () => openFullPanel(item));
+      cardsContainer.insertBefore(card, btnAddCard);
+    }
+
+    const cardEl = () => cardsContainer.querySelector(`[data-card-id="${active?.id}"]`);
+
+    function fillCard(card, item) {
+      const subtasks = item.subtasks || [];
+      const qty = fmtQty(item.qty);
+      card.dataset.searchable = getItemSearchText(item);
+      card.querySelectorAll(".card-qty-badge, .card-meta-qty").forEach((el) => el.textContent = qty);
+      card.querySelector(".card-meta-name").textContent = item.name;
+      card.querySelector("img").alt = item.name;
+      card.querySelector(".card-meta-process").textContent = item.process || "Ditulis";
+      card.querySelector(".card-meta-deadline").textContent = fmtShortDeadline(item.deadline);
+      card.querySelector(".card-meta-subtask").textContent = `${subtasks.filter((t) => t.done).length}/${subtasks.length}`;
+    }
+
+    function updateCardInList(item) {
+      const card = cardsContainer.querySelector(`[data-card-id="${item.id}"]`);
+      if (!card) return;
+      fillCard(card, item);
+      applySearchFilter();
+    }
+
+    function updateSubtaskCounterHeader() {
+      const list = active?.subtasks || [];
+      const done = list.filter((s) => s.done).length;
+      headerSubtaskDisplay.textContent = `${done}/${list.length} Selesai`;
+      $("subtask-progress-label").textContent = `${done}/${list.length} selesai`;
+      if (active) updateMainHeaderMeta(active);
+    }
+
+    function updateProcessDisplayHeader() {
+      const proc = active?.process || "Ditulis";
+      headerProcessDisplay.textContent = proc;
+      if (active) {
+        updateMainHeaderMeta(active);
+        updateCardInList(active);
+      }
+    }
+
+    function updateAttachmentDisplayHeader() {
+      const atts = active?.attachments || [];
+      headerAttachmentDisplay.textContent = `${atts.length} File`;
+      if (active) updateMainHeaderMeta(active);
+    }
+
+    function renderDescription() {
+      descDisplay.innerHTML = active?.description?.trim()
+        ? sanitizeHTML(active.description)
+        : '<span class="italic text-gray-400">Belum ada deskripsi & catatan pekerjaan. Klik tombol <strong>Edit</strong> untuk menambahkan instruksi kerja.</span>';
+    }
+
+    function openFullPanel(item) {
+      active = item;
+      if (!active.process) active.process = "Ditulis";
+      if (!active.attachments) active.attachments = [];
+
+      exitInlineEditTitle(false);
+      homeContent.classList.add("hidden");
+      pageHeaderCard.classList.add("hidden");
+
+      fullTitle.textContent = fullTargetName.textContent = item.name;
+      pcsInput.value = item.qty || 1;
+      pcsBadge.textContent = fmtQty(item.qty);
+      headerQtyDisplay.textContent = fmtQty(item.qty);
+      $("full-panel-img").src = item.img || NO_PHOTO;
+      deadlineDisplay.textContent = fmtDeadline(item.deadline || new Date().toISOString());
+      
+      updateCompleteButtons(Boolean(item.completed));
+      renderDescription();
+      renderSubtasks();
+      updateProcessDisplayHeader();
+      updateAttachmentDisplayHeader();
+
+      headerPageTitleBtn.textContent = "Home";
+      updateMainHeaderMeta(item);
+
+      fullPagePanel.classList.remove("hidden");
+      initIcons();
+    }
+
+    /* ===== Selesai / Hapus ===== */
+    function updateCompleteButtons(done) {
+      const [on, off] = done ? ["amber", "emerald"] : ["emerald", "amber"];
+      completeBtn.classList.remove(`border-${off}-300`, `bg-${off}-500`, `hover:bg-${off}-600`, `active:bg-${off}-700`);
+      completeBtn.classList.add(`border-${on}-300`, `bg-${on}-500`, `hover:bg-${on}-600`, `active:bg-${on}-700`);
+      completeBtn.querySelector("span").textContent = done ? "Batalkan Selesai" : "Selesaikan Pekerjaan";
+    }
+    completeBtn.addEventListener("click", async () => {
+      if (!active) return;
+      active.completed = !active.completed;
+      await dbSave(active);
+      updateCompleteButtons(active.completed);
+      cardEl()?.classList.toggle("is-completed", active.completed);
+      updateMainHeaderMeta(active);
+    });
+
+    $("btn-footer-delete").addEventListener("click", () => {
+      if (!active) return;
+      $("delete-warning-item-name").textContent = `"${active.name}"`;
+      toggleModal(modalDelete, true);
+    });
+    bindModal(modalDelete, $("btn-cancel-delete"));
+    $("btn-confirm-delete").addEventListener("click", async () => {
+      if (!active) return;
+      await dbDelete(active.id);
+      toggleModal(modalDelete, false);
+      active = null;
+      showHomePage();
+      await loadCards();
+    });
+
+    /* ===== FITUR PREVIEW GAMBAR (MODAL LATAR PUTIH, ZOOM & PAN) ===== */
+    let imgZoom = 1.0;
+    let imgPanX = 0, imgPanY = 0;
+    let isPanning = false;
+    let panStartX = 0, panStartY = 0;
+    let initialPanX = 0, initialPanY = 0;
+
+    function updateImageStage() {
+      imagePreviewStage.style.transform = `translate(${imgPanX}px, ${imgPanY}px) scale(${imgZoom})`;
+      zoomLevelText.textContent = `${Math.round(imgZoom * 100)}%`;
+    }
+
+    function setZoom(val) {
+      imgZoom = Math.max(0.2, Math.min(6.0, val));
+      updateImageStage();
+    }
+
+    function resetZoom() {
+      imgZoom = 1.0;
+      imgPanX = 0;
+      imgPanY = 0;
+      updateImageStage();
+    }
+
+    function fitImage() {
+      const vpW = imagePreviewViewport.clientWidth - 48;
+      const vpH = imagePreviewViewport.clientHeight - 48;
+      const imgW = imagePreviewImg.naturalWidth || 800;
+      const imgH = imagePreviewImg.naturalHeight || 600;
+      imgZoom = Math.min(1.0, vpW / imgW, vpH / imgH);
+      imgPanX = imgPanY = 0;
+      updateImageStage();
+    }
+
+    function openImagePreview(url, title = "Preview Gambar") {
+      if (!url) return;
+      imagePreviewImg.src = url;
+      imagePreviewTitle.textContent = title;
+      resetZoom();
+      toggleModal(modalImagePreview, true);
+      
+      imagePreviewImg.onload = () => {
+        fitImage();
+        imagePreviewInfo.textContent = `${imagePreviewImg.naturalWidth} × ${imagePreviewImg.naturalHeight} px • Format Gambar`;
+      };
+    }
+
+    function closeImagePreview() {
+      toggleModal(modalImagePreview, false);
+      setTimeout(() => {
+        imagePreviewImg.src = "";
+        resetZoom();
+      }, 200);
+    }
+
+    $("btn-close-image-preview").addEventListener("click", closeImagePreview);
+    modalImagePreview.addEventListener("click", (e) => {
+      if (e.target === modalImagePreview) {
+        closeImagePreview();
+      }
+    });
+
+    // Zoom Controls
+    $("btn-zoom-in").addEventListener("click", () => setZoom(imgZoom + 0.25));
+    $("btn-zoom-out").addEventListener("click", () => setZoom(imgZoom - 0.25));
+    $("btn-zoom-reset").addEventListener("click", resetZoom);
+    $("btn-zoom-fit").addEventListener("click", fitImage);
+
+    // Mouse Wheel Zoom pada Viewport
+    imagePreviewViewport.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const step = e.deltaY < 0 ? 0.15 : -0.15;
+      setZoom(imgZoom + step);
+    }, { passive: false });
+
+    // Pan Dragging (Pointer Events)
+    imagePreviewViewport.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return; // Hanya klik kiri
+      isPanning = true;
+      panStartX = e.clientX;
+      panStartY = e.clientY;
+      initialPanX = imgPanX;
+      initialPanY = imgPanY;
+      imagePreviewViewport.setPointerCapture(e.pointerId);
+    });
+
+    imagePreviewViewport.addEventListener("pointermove", (e) => {
+      if (!isPanning) return;
+      imgPanX = initialPanX + (e.clientX - panStartX);
+      imgPanY = initialPanY + (e.clientY - panStartY);
+      updateImageStage();
+    });
+
+    imagePreviewViewport.addEventListener("pointerup", (e) => {
+      isPanning = false;
+      try { imagePreviewViewport.releasePointerCapture(e.pointerId); } catch (_) {}
+    });
+    imagePreviewViewport.addEventListener("pointercancel", () => { isPanning = false; });
+
+    // Double Click to Toggle Zoom Fit / 100%
+    imagePreviewViewport.addEventListener("dblclick", () => {
+      if (Math.abs(imgZoom - 1.0) < 0.05) {
+        setZoom(1.8);
+      } else {
+        fitImage();
+      }
+    });
+
+    // Trigger Preview dari Foto Produk di Kolom 3
+    $("btn-preview-main-img").addEventListener("click", () => {
+      if (active && active.img && active.img !== NO_PHOTO) {
+        openImagePreview(active.img, active.name);
+      } else if (active) {
+        openImagePreview(active.img || NO_PHOTO, `${active.name} (Foto Produk)`);
+      }
+    });
+
+    // Keyboard ESC Shortcut untuk Image Preview & Search
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        if (!modalImagePreview.classList.contains("pointer-events-none")) {
+          closeImagePreview();
+        } else if (!searchBar.classList.contains("hidden")) {
+          closeSearch();
+        }
+      }
+    });
+
+    /* ===== Modal Edit Deskripsi & Rich Editor ===== */
+    $("btn-open-edit-desc").addEventListener("click", () => {
+      if (!active) return;
+      descEditor.innerHTML = sanitizeHTML(active.description || "");
+      toggleModal(modalEditDesc, true);
+      setTimeout(() => descEditor.focus(), 60);
+    });
+    bindModal(modalEditDesc, $("btn-close-edit-desc"), $("btn-cancel-edit-desc"));
+
+    $("btn-format-bold").addEventListener("click", () => {
+      document.execCommand("bold", false, null);
+      descEditor.focus();
+    });
+    $("btn-format-italic").addEventListener("click", () => {
+      document.execCommand("italic", false, null);
+      descEditor.focus();
+    });
+    $("btn-format-underline").addEventListener("click", () => {
+      document.execCommand("underline", false, null);
+      descEditor.focus();
+    });
+    $("btn-format-bullet").addEventListener("click", () => {
+      insertBulletAtCursor();
+      descEditor.focus();
+    });
+
+    function insertBulletAtCursor() {
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+      const bulletNode = document.createTextNode("• ");
+      range.insertNode(bulletNode);
+      range.setStartAfter(bulletNode);
+      range.setEndAfter(bulletNode);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    descEditor.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
+        
+        const node = range.startContainer;
+        const textBefore = node.nodeType === 3 ? node.textContent.slice(0, range.startOffset) : "";
+        const lines = textBefore.split(/\r?\n/);
+        const lineText = lines.pop() || "";
+
+        if (lineText.trim().startsWith("•")) {
+          e.preventDefault();
+          if (lineText.trim() === "•") {
+            document.execCommand("delete", false, null);
+            document.execCommand("insertLineBreak", false, null);
+          } else {
+            document.execCommand("insertLineBreak", false, null);
+            document.execCommand("insertText", false, "• ");
+          }
+        }
+      }
+    });
+
+    descEditor.addEventListener("keyup", (e) => {
+      if (e.key === " " || e.key === "Spacebar") {
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
+        const node = range.startContainer;
+        if (node.nodeType === 3) {
+          const text = node.textContent;
+          const offset = range.startOffset;
+          const before = text.slice(0, offset);
+          if (/(?:^|[\r\n])-\s$/.test(before)) {
+            const newText = before.replace(/(?:^|[\r\n])-\s$/, (m) => m.startsWith("-") ? "• " : m.slice(0, 1) + "• ") + text.slice(offset);
+            node.textContent = newText;
+            const newRange = document.createRange();
+            newRange.setStart(node, before.length);
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+          }
+        }
+      }
+    });
+
+    $("btn-save-edit-desc").addEventListener("click", async () => {
+      if (!active) return;
+      active.description = sanitizeHTML(descEditor.innerHTML);
+      await dbSave(active);
+      renderDescription();
+      toggleModal(modalEditDesc, false);
+    });
+
+    /* ===== Kartu Proses: Modal Pilihan & Scroll Roda Mouse ===== */
+    function renderProcessModal() {
+      processOptionsList.innerHTML = PROCESS_LIST.map((p) => {
+        const isCurrent = (active?.process || "Ditulis") === p;
+        return `
+          <button type="button" data-process="${p}" class="btn-select-proc flex items-center justify-between p-2 rounded-xl border text-left transition ${isCurrent ? "border-rose-400 bg-rose-50 text-rose-950 ring-2 ring-rose-200" : "border-gray-200 hover:border-gray-300 bg-gray-50/60 hover:bg-white text-gray-800"}">
+            <span class="text-xs font-bold">${p}</span>
+            ${isCurrent ? '<i data-lucide="check" class="h-3.5 w-3.5 text-rose-600"></i>' : ""}
+          </button>
+        `;
+      }).join("");
+      initIcons();
+
+    }
+
+    processOptionsList.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".btn-select-proc");
+      if (!btn || !active) return;
+      active.process = btn.dataset.process;
+      await dbSave(active);
+      updateProcessDisplayHeader();
+      toggleModal(modalProcess, false);
+    });
+
+    const processCard = $("header-process-card");
+    processCard.addEventListener("click", () => {
+      if (!active) return;
+      renderProcessModal();
+      toggleModal(modalProcess, true);
+    });
+    bindModal(modalProcess, $("btn-close-process-modal"));
+
+    processCard.addEventListener("wheel", async (e) => {
+      e.preventDefault();
+      if (!active) return;
+      const current = active.process || "Ditulis";
+      const currentIdx = PROCESS_LIST.indexOf(current);
+      const step = e.deltaY > 0 ? 1 : -1;
+      const nextIdx = Math.max(0, Math.min(PROCESS_LIST.length - 1, (currentIdx === -1 ? 0 : currentIdx) + step));
+      if (nextIdx !== currentIdx) {
+        active.process = PROCESS_LIST[nextIdx];
+        await dbSave(active);
+        updateProcessDisplayHeader();
+      }
+    }, { passive: false });
+
+    /* ===== Modal & Sistem Attachment (Dengan Tombol Preview Gambar) ===== */
+    function renderAttachmentList() {
+      const list = active?.attachments || [];
+      if (!list.length) {
+        attachmentList.innerHTML = `
+          <div class="flex flex-col items-center justify-center p-4 text-center rounded-xl border border-dashed border-gray-200 bg-gray-50/60">
+            <i data-lucide="file-question" class="h-5 w-5 text-gray-300 mb-1"></i>
+            <p class="text-xs font-semibold text-gray-500">Belum ada file lampiran</p>
+            <p class="text-[10px] text-gray-400">Gunakan tombol "Pilih File" di bawah untuk melampirkan berkas.</p>
+          </div>
+        `;
+      } else {
+        attachmentList.innerHTML = list.map((file, idx) => {
+          const isImage = (file.type && file.type.startsWith("image/")) || 
+                          (file.data && file.data.startsWith("data:image/")) || 
+                          /\.(png|jpe?g|webp|svg|gif|bmp|ico)$/i.test(file.name);
+
+          return `
+            <div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-gray-200 bg-gray-50/80 hover:bg-white transition">
+              <div class="flex items-center gap-2 min-w-0 flex-1 ${isImage ? 'cursor-pointer hover:text-blue-600' : ''}" data-preview-index="${isImage ? idx : ''}">
+                <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${isImage ? 'bg-blue-100 text-blue-700' : 'bg-sky-100 text-sky-700'}">
+                  <i data-lucide="${isImage ? 'image' : 'file'}" class="h-4 w-4"></i>
+                </div>
+                <div class="flex flex-col min-w-0 flex-1">
+                  <span class="text-xs font-bold text-gray-800 truncate" title="${esc(file.name)}">${esc(file.name)}</span>
+                  <span class="text-[10px] text-gray-400">${file.size || "Berkas"} ${isImage ? '• Gambar' : ''}</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1">
+                ${isImage ? `<button type="button" data-index="${idx}" class="btn-preview-attachment p-1 rounded text-gray-500 hover:text-blue-600 transition" title="Preview Gambar"><i data-lucide="eye" class="h-3.5 w-3.5"></i></button>` : ""}
+                ${file.data ? `<a href="${file.data}" download="${esc(file.name)}" class="p-1 rounded text-gray-500 hover:text-sky-600 transition" title="Unduh berkas"><i data-lucide="download" class="h-3.5 w-3.5"></i></a>` : ""}
+                <button type="button" data-index="${idx}" class="btn-delete-attachment p-1 rounded text-gray-400 hover:text-red-500 transition" title="Hapus lampiran">
+                  <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+      initIcons();
+
+    }
+
+    attachmentList.addEventListener("click", async (e) => {
+      const del = e.target.closest(".btn-delete-attachment");
+      if (del) {
+        active.attachments.splice(Number(del.dataset.index), 1);
+        await dbSave(active);
+        renderAttachmentList();
+        updateAttachmentDisplayHeader();
+        return;
+      }
+      const target = e.target.closest(".btn-preview-attachment, [data-preview-index]");
+      const idx = target?.dataset.index ?? target?.dataset.previewIndex;
+      if (idx === undefined || idx === "") return;
+      const f = active?.attachments?.[Number(idx)];
+      if (f?.data) openImagePreview(f.data, f.name);
+    });
+
+    $("header-attachment-card").addEventListener("click", () => {
+      if (!active) return;
+      if (!active.attachments) active.attachments = [];
+      renderAttachmentList();
+      toggleModal(modalAttachment, true);
+    });
+    bindModal(modalAttachment, $("btn-close-attachment-modal"), $("btn-done-attachment"));
+
+    $("btn-trigger-upload-attachment").addEventListener("click", () => $("input-attachment-file").click());
+    $("input-attachment-file").addEventListener("change", async (e) => {
+      const files = Array.from(e.target.files);
+      if (!files.length || !active) return;
+      if (!active.attachments) active.attachments = [];
+
+      for (const file of files) {
+        const base64 = await fileToBase64(file);
+        active.attachments.push({
+          name: file.name,
+          size: `${(file.size / 1024).toFixed(1)} KB`,
+          type: file.type,
+          data: base64
+        });
+      }
+      await dbSave(active);
+      renderAttachmentList();
+      updateAttachmentDisplayHeader();
+      e.target.value = "";
+    });
+
+    const fileToBase64 = (file) => new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => resolve("");
+      reader.readAsDataURL(file);
+    });
+
+    /* ===== Jumlah pcs: Border dihapus & otomatis kursor di kanan teks ===== */
+    const savePcs = debounce((item) => {
+      dbSave(item);
+      updateCardInList(item);
+      updateMainHeaderMeta(item);
+    }, 350);
+
+    function placeCaretAtEnd(input) {
+      if (!input) return;
+      setTimeout(() => {
+        const len = String(input.value || "").length;
+        if (typeof input.setSelectionRange === "function") {
+          input.setSelectionRange(len, len);
+        }
+      }, 10);
+    }
+
+    function applyPcsChange(value) {
+      if (!active) return;
+      const cleanVal = String(value).replace(/[^0-9]/g, "");
+      const qty = Math.max(1, parseInt(cleanVal, 10) || 1);
+      active.qty = qty;
+      pcsInput.value = qty;
+      pcsBadge.textContent = fmtQty(qty);
+      headerQtyDisplay.textContent = fmtQty(qty);
+      savePcs(active);
+    }
+
+    pcsInput.addEventListener("focus", () => placeCaretAtEnd(pcsInput));
+    pcsInput.addEventListener("click", () => placeCaretAtEnd(pcsInput));
+    pcsInput.addEventListener("input", (e) => {
+      applyPcsChange(e.target.value);
+      placeCaretAtEnd(pcsInput);
+    });
+
+    $("pcs-stepper-box").addEventListener("wheel", (e) => {
+      e.preventDefault();
+      if (!active) return;
+      const step = e.shiftKey ? 10 : 1;
+      const cur = parseInt(pcsInput.value, 10) || 1;
+      applyPcsChange(cur + (e.deltaY < 0 ? step : -step));
+      placeCaretAtEnd(pcsInput);
+    }, { passive: false });
+
+    $("header-qty-card").addEventListener("click", () => {
+      pcsInput.focus();
+      placeCaretAtEnd(pcsInput);
+    });
+
+    /* ===== Subtask ===== */
+    const subtasksBox = $("subtasks-container");
+    function renderSubtasks() {
+      const list = active.subtasks || [];
+      updateSubtaskCounterHeader();
+
+      if (!list.length) {
+        subtasksBox.innerHTML = `
+          <div class="flex flex-col items-center justify-center p-6 text-center rounded-xl border border-dashed border-gray-200 bg-gray-50/60 my-auto">
+            <i data-lucide="check-square" class="h-6 w-6 text-gray-300 mb-1.5"></i>
+            <p class="text-xs font-medium text-gray-500">Belum ada checklist subtask</p>
+            <p class="text-[10px] text-gray-400">Tambahkan langkah seperti potong bahan, poles, grafir, atau perakitan.</p>
+          </div>`;
+      } else {
+        subtasksBox.innerHTML = list.map((t, i) => `
+          <div class="flex items-center justify-between gap-2 p-2 rounded-lg border transition-all ${t.done ? "bg-emerald-50/50 border-emerald-200 text-emerald-900" : "bg-gray-50/70 border-gray-200 text-gray-800 hover:bg-gray-50"}">
+            <label class="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer select-none">
+              <input type="checkbox" data-index="${i}" ${t.done ? "checked" : ""} class="subtask-checkbox h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
+              <span class="text-xs font-medium truncate ${t.done ? "line-through text-gray-400" : "text-gray-700"}"></span>
+            </label>
+            <button type="button" data-index="${i}" class="btn-delete-subtask text-gray-400 hover:text-red-500 p-1 rounded transition" title="Hapus subtask">
+              <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+            </button>
+          </div>`).join("");
+        subtasksBox.querySelectorAll("label span").forEach((el, i) => el.textContent = list[i].text);
+      }
+      initIcons();
+    }
+    const saveAndRenderSubtasks = async () => { 
+      await dbSave(active); 
+      renderSubtasks();
+      updateCardInList(active);
+    };
+
+    subtasksBox.addEventListener("change", (e) => {
+      if (!e.target.matches(".subtask-checkbox")) return;
+      active.subtasks[e.target.dataset.index].done = e.target.checked;
+      saveAndRenderSubtasks();
+    });
+    subtasksBox.addEventListener("click", (e) => {
+      const btn = e.target.closest(".btn-delete-subtask");
+      if (!btn) return;
+      active.subtasks.splice(btn.dataset.index, 1);
+      saveAndRenderSubtasks();
+    });
+    $("form-add-subtask").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = $("input-new-subtask");
+      const text = input.value.trim();
+      if (!text || !active) return;
+      (active.subtasks ||= []).push({ text, done: false });
+      input.value = "";
+      saveAndRenderSubtasks();
+    });
+
+    /* ===== Edit judul inline ===== */
+    async function exitInlineEditTitle(save = true) {
+      if (titleInput.classList.contains("hidden")) return;
+      const name = titleInput.value.trim();
+      titleInput.classList.add("hidden");
+      fullTitle.classList.remove("hidden");
+
+      if (save && name && active && name !== active.name) {
+        active.name = name;
+        await dbSave(active);
+        [fullTitle, fullTargetName, headerCardTitle].forEach((el) => el.textContent = name);
+        updateCardInList(active);
+        updateMainHeaderMeta(active);
+      }
+    }
+    $("name-card").addEventListener("click", () => {
+      if (!active) return;
+      titleInput.value = active.name;
+      fullTitle.classList.add("hidden");
+      titleInput.classList.remove("hidden");
+      titleInput.focus();
+      titleInput.select();
+    });
+    titleInput.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== "Escape") return;
+      e.preventDefault();
+      exitInlineEditTitle(e.key === "Enter");
+    });
+    titleInput.addEventListener("blur", () => exitInlineEditTitle(true));
+
+    /* ===== Deadline picker ===== */
+    const FALLBACK_DEADLINE = "17 Oktober 2026 | 15:00 WIB";
+    const MAX_MIN = 23 * 60 + 45;
+    const fmtParts = (y, m, d, h, mi) => `${d} ${MONTHS[m]} ${y} | ${pad(h)}:${pad(mi)} WIB`;
+    const fmtShortParts = (y, m, d, h, mi) => `${d} ${SHORT_MONTHS[m]} ${pad(h)}:${pad(mi)}`;
+    const fmtDeadline = (iso) => {
+      const dt = new Date(iso);
+      return isNaN(dt) ? FALLBACK_DEADLINE : fmtParts(dt.getFullYear(), dt.getMonth(), dt.getDate(), dt.getHours(), dt.getMinutes());
+    };
+    const fmtShortDeadline = (iso) => {
+      const dt = new Date(iso);
+      return isNaN(dt) ? "17 Okt 15:00" : fmtShortParts(dt.getFullYear(), dt.getMonth(), dt.getDate(), dt.getHours(), dt.getMinutes());
+    };
+
+    let pick = { y: 0, m: 0, d: 0, h: 0, min: 0 };
+    let view = { y: 0, m: 0 };
+
+    function getMinAllowedMinutes(isToday) {
+      if (!isToday) return 0;
+      const n = new Date();
+      const curMins = n.getHours() * 60 + n.getMinutes();
+      let rounded = Math.ceil(curMins / 15) * 15;
+      if (rounded > MAX_MIN) rounded = MAX_MIN;
+      return rounded;
+    }
+
+    const setPickTime = (mins) => {
+      pick.h = Math.floor(mins / 60);
+      pick.min = mins % 60;
+    };
+    const isPickToday = () => {
+      const n = new Date();
+      return pick.y === n.getFullYear() && pick.m === n.getMonth() && pick.d === n.getDate();
+    };
+
+    const warnBox = $("time-warning-box");
+    let warnTimer;
+    const setWarning = (on) => {
+      warnBox.classList.toggle("hidden", !on);
+      warnBox.classList.toggle("flex", on);
+    };
+    function showTimeWarning(text) {
+      $("time-warning-text").textContent = text;
+      setWarning(true);
+      clearTimeout(warnTimer);
+      warnTimer = setTimeout(() => setWarning(false), 3000);
+    }
+
+    function renderTime() {
+      $("display-picker-hour").textContent = pad(pick.h);
+      $("display-picker-min").textContent = pad(pick.min);
+      $("modal-deadline-preview").textContent = fmtParts(pick.y, pick.m, pick.d, pick.h, pick.min);
+    }
+
+    function modifyTime(delta) {
+      const today = isPickToday();
+      const minAllowed = getMinAllowedMinutes(today);
+      const current = pick.h * 60 + pick.min;
+      const target = current + delta;
+
+      if (today && target < minAllowed) {
+        setPickTime(minAllowed);
+        const h = pad(Math.floor(minAllowed / 60)), m = pad(minAllowed % 60);
+        showTimeWarning(`Waktu minimal saat ini adalah ${h}:${m} WIB (kelipatan 15 menit ke atas)!`);
+      } else if (target < 0) {
+        setPickTime(0);
+      } else if (target > MAX_MIN) {
+        setPickTime(MAX_MIN);
+      } else {
+        setPickTime(target);
+        setWarning(false);
+      }
+      renderTime();
+    }
+
+    $("time-scroll-box").addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const step = e.shiftKey ? 60 : 15;
+      modifyTime(e.deltaY < 0 ? step : -step);
+    }, { passive: false });
+
+    Object.entries({ "btn-step-minus-60": -60, "btn-step-minus-15": -15, "btn-step-plus-15": 15, "btn-step-plus-60": 60 })
+      .forEach(([id, delta]) => $(id).addEventListener("click", () => modifyTime(delta)));
+
+    function renderCalendar() {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      $("cal-month-year-label").textContent = `${MONTHS[view.m]} ${view.y}`;
+      $("cal-prev-month").disabled = view.y * 12 + view.m <= now.getFullYear() * 12 + now.getMonth();
+
+      const grid = $("cal-days-grid");
+      grid.innerHTML = "";
+      const firstWeekday = new Date(view.y, view.m, 1).getDay();
+      const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
+      for (let i = 0; i < firstWeekday; i++) grid.insertAdjacentHTML("beforeend", '<div class="h-8"></div>');
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const time = new Date(view.y, view.m, d).getTime();
+        const isPast = time < today, isToday = time === today;
+        const isSelected = view.y === pick.y && view.m === pick.m && d === pick.d;
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = d;
+        btn.className = isPast ? "h-8 w-full rounded-lg text-xs font-medium text-gray-300 bg-gray-50/50 cursor-not-allowed select-none"
+          : isSelected ? "cal-day-btn h-8 w-full rounded-lg text-xs font-bold bg-amber-500 text-white shadow-sm ring-2 ring-amber-300/70 select-none scale-105 transition"
+          : isToday ? "cal-day-btn h-8 w-full rounded-lg text-xs font-bold text-amber-900 bg-amber-100 border border-amber-300 hover:bg-amber-200 select-none transition"
+          : "cal-day-btn h-8 w-full rounded-lg text-xs font-medium text-gray-700 hover:bg-amber-100 hover:text-amber-950 select-none transition";
+        btn.disabled = isPast;
+        if (!isPast) btn.addEventListener("click", () => {
+          Object.assign(pick, { y: view.y, m: view.m, d });
+          const today = isPickToday();
+          const minAllowed = getMinAllowedMinutes(today);
+          if (today && (pick.h * 60 + pick.min) < minAllowed) {
+            setPickTime(minAllowed);
+            const h = pad(Math.floor(minAllowed / 60)), m = pad(minAllowed % 60);
+            showTimeWarning(`Jam disesuaikan ke minimal ${h}:${m} WIB (kelipatan 15 menit ke atas).`);
+          }
+          renderCalendar();
+          renderTime();
+        });
+        grid.appendChild(btn);
+      }
+    }
+
+    const shiftMonth = (delta) => {
+      const dt = new Date(view.y, view.m + delta, 1);
+      view = { y: dt.getFullYear(), m: dt.getMonth() };
+      renderCalendar();
+    };
+    $("cal-prev-month").addEventListener("click", () => shiftMonth(-1));
+    $("cal-next-month").addEventListener("click", () => shiftMonth(1));
+    $("cal-btn-today").addEventListener("click", () => {
+      const now = new Date();
+      Object.assign(pick, { y: now.getFullYear(), m: now.getMonth(), d: now.getDate() });
+      view = { y: pick.y, m: pick.m };
+      const minAllowed = getMinAllowedMinutes(true);
+      if ((pick.h * 60 + pick.min) < minAllowed) {
+        setPickTime(minAllowed);
+      }
+      renderCalendar();
+      renderTime();
+    });
+
+    $("deadline-card").addEventListener("click", () => {
+      if (!active) return;
+      const now = new Date();
+      let dt = active.deadline ? new Date(active.deadline) : now;
+      if (isNaN(dt.getTime())) dt = now;
+
+      pick = { y: dt.getFullYear(), m: dt.getMonth(), d: dt.getDate(), h: dt.getHours(), min: dt.getMinutes() };
+      
+      let totalMins = pick.h * 60 + pick.min;
+      totalMins = Math.ceil(totalMins / 15) * 15;
+      if (totalMins > MAX_MIN) totalMins = MAX_MIN;
+      setPickTime(totalMins);
+
+      const today = isPickToday();
+      const minAllowed = getMinAllowedMinutes(today);
+      if (today && (pick.h * 60 + pick.min) < minAllowed) {
+        setPickTime(minAllowed);
+      }
+
+      view = { y: pick.y, m: pick.m };
+      renderCalendar();
+      renderTime();
+      setWarning(false);
+      toggleModal(modalDeadline, true);
+    });
+    bindModal(modalDeadline, $("btn-close-deadline-modal"), $("btn-cancel-deadline-modal"));
+
+    $("btn-save-deadline").addEventListener("click", async () => {
+      const today = isPickToday();
+      const minAllowed = getMinAllowedMinutes(today);
+      const cur = pick.h * 60 + pick.min;
+      if (today && cur < minAllowed) {
+        const h = pad(Math.floor(minAllowed / 60)), m = pad(minAllowed % 60);
+        return showTimeWarning(`Batas waktu minimal adalah ${h}:${m} WIB!`);
+      }
+      if (active) {
+        active.deadline = `${pick.y}-${pad(pick.m + 1)}-${pad(pick.d)}T${pad(pick.h)}:${pad(pick.min)}`;
+        await dbSave(active);
+        deadlineDisplay.textContent = fmtDeadline(active.deadline);
+        updateCardInList(active);
+        updateMainHeaderMeta(active);
+      }
+      toggleModal(modalDeadline, false);
+    });
+
+    /* ===== Upload foto (drag & drop) ===== */
+    const dropzone = $("dropzone"), fileInput = $("file-input");
+    const dropzonePrompt = $("dropzone-prompt"), dropzonePreview = $("dropzone-preview");
+    let currentPhoto = "";
+
+    function setPreview(dataUrl = "", filename = "foto-produk") {
+      currentPhoto = dataUrl;
+      if (!dataUrl) fileInput.value = "";
+      $("preview-img-tag").src = dataUrl;
+      $("preview-filename").textContent = filename;
+      dropzonePrompt.classList.toggle("hidden", !!dataUrl);
+      dropzonePreview.classList.toggle("hidden", !dataUrl);
+      dropzonePreview.classList.toggle("flex", !!dataUrl);
+    }
+    function handleFile(file) {
+      if (!file || !file.type.startsWith("image/")) return;
+      const reader = new FileReader();
+      reader.onload = (e) => setPreview(e.target.result, file.name);
+      reader.readAsDataURL(file);
+    }
+
+    dropzone.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", (e) => handleFile(e.target.files[0]));
+    ["dragenter", "dragover", "dragleave", "drop"].forEach((type) => dropzone.addEventListener(type, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.toggle("dragover", type === "dragenter" || type === "dragover");
+      if (type === "drop") handleFile(e.dataTransfer.files[0]);
+    }));
+    $("btn-remove-file").addEventListener("click", (e) => { e.stopPropagation(); setPreview(); });
+
+    /* ===== Modal tambah data ===== */
+    const inputName = $("input-item-name"), inputQty = $("input-item-qty");
+    btnAddCard.addEventListener("click", () => {
+      toggleModal(modalAdd, true);
+      inputName.value = "";
+      inputQty.value = "";
+      setPreview();
+      setTimeout(() => inputName.focus(), 50);
+    });
+    bindModal(modalAdd, $("btn-close-modal"), $("btn-cancel-modal"));
+
+    $("form-add-card").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = inputName.value.trim(), qty = inputQty.value.trim();
+      if (!name || !qty) return;
+
+      const now = new Date().toISOString();
+      const item = {
+        name, 
+        qty: Number(qty), 
+        img: currentPhoto || NO_PHOTO, 
+        description: "",
+        subtasks: [], 
+        completed: false, 
+        deadline: now, 
+        process: "Ditulis",
+        attachments: [],
+        createdAt: now
+      };
+      item.id = await dbAdd(item);
+      createCard(item);
+      initIcons();
+      toggleModal(modalAdd, false);
+      applySearchFilter();
+    });
+
+    /* ===== Start ===== */
+    openDatabase().then(loadCards).catch((err) => {
+      console.error("Gagal membuka DB:", err);
+      $("db-status-dot").classList.replace("bg-emerald-500", "bg-red-500");
+    });
+  </script>
+
+  <script>
+    if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(console.error));
+    }
+  </script>
+
+</body>
+</html>
