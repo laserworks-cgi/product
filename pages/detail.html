@@ -165,21 +165,44 @@
 
     <!-- KOLOM 3 (3): FOTO PRODUK 5:7 -->
     <div class="col-prop-3 bg-gray-50/70 p-3 sm:p-4 flex flex-col items-center justify-center md:overflow-hidden min-h-[320px] md:min-h-0">
-      <div class="w-full h-full flex flex-col items-center justify-center min-h-0">
+            <div class="w-full h-full flex flex-col items-center justify-center min-h-0">
         <div id="btn-preview-main-img" class="group relative max-h-full max-w-full flex items-center justify-center aspect-[5/7] rounded-xl overflow-hidden shadow-sm border border-gray-200 bg-white cursor-pointer" title="Klik untuk memperbesar & preview foto produk">
-          <img id="full-panel-img" src="" alt="Foto Produk" class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105" />
+          <img id="full-panel-img" src="" alt="Foto Produk" class="photo-img h-full w-full object-cover transition-transform duration-200 group-hover:scale-105" />
 
-          <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none z-10">
+          <!-- Petunjuk saat bingkai masih kosong (ditampilkan oleh photo.js) -->
+          <div id="photo-empty-hint" class="hidden absolute inset-x-0 bottom-8 flex-col items-center gap-1 pointer-events-none z-10 text-center px-2">
+            <span class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
+              <i data-lucide="upload" class="h-3.5 w-3.5"></i>
+              <span>Klik untuk unggah foto</span>
+            </span>
+            <span class="text-[10px] text-gray-400">PNG, JPG, WebP</span>
+          </div>
+
+          <!-- Overlay preview (hanya saat sudah ada foto) -->
+          <div id="photo-preview-overlay" class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none z-10">
             <span class="bg-white/95 text-gray-900 text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1.5">
               <i data-lucide="zoom-in" class="h-3.5 w-3.5 text-blue-600"></i>
               <span>Preview Gambar</span>
             </span>
           </div>
 
+          <!-- Tombol Ganti / Hapus foto (hanya saat sudah ada foto) -->
+          <div id="photo-actions" class="hidden absolute top-2 right-2 z-20 items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+            <button type="button" id="btn-change-photo" class="flex h-7 w-7 items-center justify-center rounded-md bg-white/95 text-gray-700 shadow-sm border border-gray-200 hover:text-blue-600 transition" title="Ganti foto">
+              <i data-lucide="image-up" class="h-3.5 w-3.5"></i>
+            </button>
+            <button type="button" id="btn-remove-photo" class="flex h-7 w-7 items-center justify-center rounded-md bg-white/95 text-gray-700 shadow-sm border border-gray-200 hover:text-red-500 transition" title="Hapus foto">
+              <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+            </button>
+          </div>
+
           <div class="absolute bottom-2 right-2 rounded-md bg-black/80 px-2 py-0.5 text-xs font-extrabold text-white backdrop-blur-xs border border-white/20 z-10">
             <span id="full-panel-badge-img">0 pcs</span>
           </div>
         </div>
+
+        <!-- Input file harus di LUAR bingkai agar klik programatiknya tidak memicu klik bingkai lagi -->
+        <input type="file" id="input-photo-file" accept="image/*" class="hidden" />
       </div>
     </div>
 

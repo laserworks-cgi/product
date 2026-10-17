@@ -1,6 +1,6 @@
 import { dbAll, dbAdd } from "../core/db.js";
 import { DEFAULT_IMAGE } from "../core/config.js";
-import { $, icons, fmtQty, fmtShortDeadline, imgSrc } from "../core/utils.js";
+import { $, icons, fmtQty, fmtShortDeadline, imgSrc, hasPhoto } from "../core/utils.js";
 import { newItem, normalizeItem, searchText, sortItems } from "../core/items.js";
 import { on, setActive, state } from "../core/state.js";
 import { navigate } from "../core/router.js";
@@ -58,12 +58,12 @@ function createCard(item) {
   card.dataset.searchable = searchText(item);
 
   card.innerHTML = `
-    <div class="card-frame shadow-xs">
+      <div class="card-frame shadow-xs ${hasPhoto(item) ? "" : "photo-empty"}">
       ${item.completed ? `<div class="absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md ring-2 ring-white">
          <i data-lucide="check" class="h-3.5 w-3.5 stroke-[3]"></i>
        </div>
        <div class="absolute inset-0 bg-emerald-500/15 pointer-events-none z-[5]"></div>` : ""}
-      <img alt="" class="card-img h-full w-full object-cover" />
+      <img alt="" class="card-img photo-img h-full w-full object-cover" />
       <div class="absolute bottom-2 right-2 rounded-md bg-black/80 px-2 py-0.5 text-[11px] font-extrabold text-white shadow-sm backdrop-blur-xs flex items-center gap-1 border border-white/20 z-10">
         <span class="card-qty-badge"></span>
       </div>
@@ -87,7 +87,11 @@ function createCard(item) {
   const img = card.querySelector(".card-img");
   img.src = imgSrc(item);
   img.alt = item.name;
-  img.onerror = () => { img.onerror = null; img.src = DEFAULT_IMAGE; };
+    img.onerror = () => {
+    img.onerror = null;
+    img.src = DEFAULT_IMAGE;
+    card.querySelector(".card-frame").classList.add("photo-empty");
+  };
 
   card.querySelectorAll(".card-qty-badge, .card-meta-qty").forEach((el) => { el.textContent = fmtQty(item.qty); });
   card.querySelector(".card-meta-name").textContent = item.name;

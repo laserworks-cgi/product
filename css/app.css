@@ -268,31 +268,3 @@ html, body {
   pointer-events: none;
   display: block;
 }
-/* ===== Bingkai kosong (belum ada foto) =====
-   Dipakai di kartu daftar (.card-frame) dan di halaman detail (#btn-preview-main-img).
-   Bingkai diberi class "photo-empty", gambarnya diberi class "photo-img". */
-.photo-empty {
-  background-color: #f8fafc;
-  border-style: dashed;
-  border-width: 2px;
-}
-
-.card-frame.photo-empty {
-  border-color: #cbd5e1;
-}
-
-#btn-preview-main-img.photo-empty {
-  border-color: #cbd5e1;
-}
-
-/* Ikon tampil kecil di tengah, tidak memenuhi bingkai */
-.photo-empty .photo-img {
-  object-fit: contain;
-  padding: 28% 27%;
-}
-
-/* Bingkai kosong di halaman detail bisa diklik untuk unggah */
-#btn-preview-main-img.photo-empty:hover {
-  border-color: #2563eb;
-  background-color: #eff6ff;
-}
