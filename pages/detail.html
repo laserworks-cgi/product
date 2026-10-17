@@ -1,0 +1,426 @@
+<section class="flex-1 flex flex-col gap-3 overflow-hidden min-h-0">
+
+  <!-- HEADER PANEL: 6 KARTU BERWARNA -->
+  <div class="shrink-0 rounded-xl border border-gray-200/80 bg-white p-2.5 shadow-xs">
+    <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-0.5">
+
+      <button id="btn-back-to-home" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-100 hover:text-blue-600" title="Kembali ke Home">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i>
+      </button>
+
+      <!-- 1. NAMA PRODUK (BIRU) -->
+      <div id="name-card" class="group flex shrink-0 items-center gap-2.5 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50/70 hover:bg-blue-100/70 hover:border-blue-300 transition-all cursor-pointer shadow-2xs text-left min-w-[150px] max-w-[220px]" title="Klik untuk edit nama produk">
+        <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-blue-100 text-blue-700 group-hover:bg-blue-200/80 transition-colors">
+          <i data-lucide="box" class="h-4 w-4"></i>
+        </div>
+        <div class="flex flex-col min-w-0 flex-1">
+          <span class="text-[9px] font-bold uppercase tracking-wider text-blue-700/80 leading-none">Nama Produk</span>
+          <div id="full-panel-title-wrapper" class="relative flex items-center min-w-0 mt-0.5">
+            <h1 id="full-panel-title" class="text-xs font-bold text-blue-950 truncate leading-none">Detail Kartu</h1>
+            <input type="text" id="full-panel-title-input" class="hidden title-inline-input text-xs font-bold tracking-tight text-blue-950" spellcheck="false" />
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. JUMLAH (UNGU) -->
+      <div id="header-qty-card" class="group flex shrink-0 items-center gap-2 px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50/70 hover:bg-purple-100/70 hover:border-purple-300 transition-all cursor-pointer shadow-2xs text-left" title="Klik untuk fokus ubah jumlah pcs">
+        <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-purple-100/80 text-purple-700 group-hover:bg-purple-200/80 transition-colors">
+          <i data-lucide="layers" class="h-4 w-4"></i>
+        </div>
+        <div class="flex flex-col select-none">
+          <span class="text-[9px] font-bold uppercase tracking-wider text-purple-700/80 leading-none">Jumlah</span>
+          <span id="header-qty-display" class="text-xs font-bold text-purple-950 mt-0.5 leading-none">0 pcs</span>
+        </div>
+      </div>
+
+      <!-- 3. DEADLINE (AMBER) -->
+      <button type="button" id="deadline-card" class="group flex shrink-0 items-center gap-2 px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50/70 hover:bg-amber-100 hover:border-amber-300 transition-all cursor-pointer shadow-2xs text-left" title="Klik untuk mengatur batas waktu (deadline)">
+        <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-100/80 text-amber-700 group-hover:bg-amber-200/80 transition-colors">
+          <i data-lucide="calendar-clock" class="h-4 w-4"></i>
+        </div>
+        <div class="flex flex-col select-none">
+          <span class="text-[9px] font-bold uppercase tracking-wider text-amber-700/80 leading-none">Deadline</span>
+          <span id="deadline-display" class="text-xs font-bold text-amber-950 mt-0.5 leading-none">-</span>
+        </div>
+      </button>
+
+      <!-- 4. PROGRES SUBTASK (EMERALD) -->
+      <div id="header-subtask-card" class="group flex shrink-0 items-center gap-2 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/70 hover:border-emerald-300 transition-all cursor-pointer shadow-2xs text-left" title="Status progres checklist subtask">
+        <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-emerald-100/80 text-emerald-700 group-hover:bg-emerald-200/80 transition-colors">
+          <i data-lucide="check-check" class="h-4 w-4"></i>
+        </div>
+        <div class="flex flex-col select-none">
+          <span class="text-[9px] font-bold uppercase tracking-wider text-emerald-700/80 leading-none">Progres Subtask</span>
+          <span id="header-subtask-display" class="text-xs font-bold text-emerald-950 mt-0.5 leading-none">0/0 Selesai</span>
+        </div>
+      </div>
+
+      <!-- 5. PROSES (ROSE - KLIK & SCROLL RODA MOUSE) -->
+      <button type="button" id="header-process-card" class="group flex shrink-0 items-center gap-2 px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50/70 hover:bg-rose-100/70 hover:border-rose-300 transition-all cursor-ns-resize shadow-2xs text-left" title="Klik untuk pilih status, atau scroll mouse wheel untuk mengubah urutan proses">
+        <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-rose-100/80 text-rose-700 group-hover:bg-rose-200/80 transition-colors">
+          <i data-lucide="sliders-horizontal" class="h-4 w-4"></i>
+        </div>
+        <div class="flex flex-col select-none">
+          <span class="text-[9px] font-bold uppercase tracking-wider text-rose-700/80 leading-none">Proses</span>
+          <div class="flex items-center gap-1 mt-0.5">
+            <span id="header-process-display" class="text-xs font-bold text-rose-950 leading-none">Ditulis</span>
+            <i data-lucide="chevrons-up-down" class="h-3 w-3 text-rose-500"></i>
+          </div>
+        </div>
+      </button>
+
+      <!-- 6. ATTACHMENT (SKY) -->
+      <button type="button" id="header-attachment-card" class="group flex shrink-0 items-center gap-2 px-3 py-1.5 rounded-lg border border-sky-200 bg-sky-50/70 hover:bg-sky-100/70 hover:border-sky-300 transition-all cursor-pointer shadow-2xs text-left" title="Klik untuk kelola berkas lampiran">
+        <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-sky-100/80 text-sky-700 group-hover:bg-sky-200/80 transition-colors">
+          <i data-lucide="paperclip" class="h-4 w-4"></i>
+        </div>
+        <div class="flex flex-col select-none">
+          <span class="text-[9px] font-bold uppercase tracking-wider text-sky-700/80 leading-none">Attachment</span>
+          <span id="header-attachment-display" class="text-xs font-bold text-sky-950 mt-0.5 leading-none">0 File</span>
+        </div>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- RUANG KERJA: 3 KOLOM RASIO 4 : 4 : 3 -->
+  <div class="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs min-h-0 custom-scrollbar">
+
+    <!-- KOLOM 1 (4): JUDUL, JUMLAH & DESKRIPSI -->
+    <div class="col-prop-4 border-b md:border-b-0 md:border-r border-gray-200 p-4 md:p-5 flex flex-col justify-between md:overflow-y-auto custom-scrollbar bg-slate-50/30">
+      <div class="flex flex-col gap-4">
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200/70">
+          <div class="min-w-0 flex-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Nama Produk</span>
+            <h2 id="full-panel-target-name" class="text-lg md:text-xl font-black text-gray-900 mt-0.5 leading-snug break-words">Nama Item</h2>
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            <div id="pcs-stepper-box" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 hover:bg-blue-100/80 px-2.5 py-1.5 text-xs font-extrabold text-blue-700 border border-blue-200 hover:border-blue-300 shadow-2xs transition-colors cursor-ns-resize select-none" title="Scroll mouse wheel atau klik untuk mengetik angka">
+              <i data-lucide="layers" class="h-4 w-4 text-blue-600 shrink-0"></i>
+              <div class="flex items-center">
+                <input type="text" inputmode="numeric" pattern="[0-9]*" id="full-panel-pcs-input" value="0" class="w-16 bg-transparent text-right font-black text-blue-900 border-none outline-none focus:outline-none focus:ring-0 p-0 cursor-text caret-blue-600" />
+                <span class="ml-1 text-xs font-bold text-blue-700">pcs</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2 flex-1 min-h-0">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-gray-700">
+              <i data-lucide="file-text" class="h-3.5 w-3.5 text-blue-600"></i>
+              <span>Deskripsi & Catatan Pekerjaan</span>
+            </div>
+
+            <button type="button" id="btn-open-edit-desc" class="group flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 border border-blue-200 transition shadow-2xs" title="Edit Deskripsi">
+              <i data-lucide="pencil" class="h-3.5 w-3.5 transition-transform group-hover:scale-110"></i>
+              <span>Edit</span>
+            </button>
+          </div>
+
+          <div id="desc-text-wrapper" class="w-full bg-transparent p-1 min-h-[140px] max-h-[260px] overflow-y-auto custom-scrollbar">
+            <div id="full-panel-desc-display" class="break-words text-xs text-gray-700 leading-relaxed space-y-1"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="pt-3 border-t border-gray-200/60 mt-4 flex items-center justify-between gap-2">
+        <button type="button" id="btn-footer-delete" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 shadow-2xs transition" title="Hapus Pekerjaan">
+          <i data-lucide="trash-2" class="h-3.5 w-3.5 text-gray-500"></i>
+          <span>Hapus</span>
+        </button>
+
+        <button type="button" id="btn-footer-complete" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition" title="Selesaikan Pekerjaan">
+          <i data-lucide="check-circle" class="h-3.5 w-3.5"></i>
+          <span id="btn-footer-complete-text">Selesaikan Pekerjaan</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- KOLOM 2 (4): SUBTASK -->
+    <div class="col-prop-4 border-b md:border-b-0 md:border-r border-gray-200 p-4 md:p-5 flex flex-col md:overflow-hidden min-h-0 bg-white">
+      <div class="flex-1 flex flex-col min-h-0 gap-2.5">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-bold uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
+            <i data-lucide="list-checks" class="h-4 w-4 text-blue-600"></i>
+            <span>Subtask (Checklist)</span>
+          </label>
+          <span id="subtask-progress-label" class="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">0/0 selesai</span>
+        </div>
+
+        <form id="form-add-subtask" class="flex gap-1.5">
+          <input type="text" id="input-new-subtask" placeholder="Tambah langkah kerja..." class="flex-1 min-w-0 rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+          <button type="submit" class="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition shrink-0 shadow-2xs" title="Tambah Subtask">
+            <i data-lucide="plus" class="h-3.5 w-3.5"></i>
+            <span class="hidden sm:inline">Tambah</span>
+          </button>
+        </form>
+
+        <div id="subtasks-container" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1.5 pr-1 mt-1 min-h-[160px]"></div>
+      </div>
+    </div>
+
+    <!-- KOLOM 3 (3): FOTO PRODUK 5:7 -->
+    <div class="col-prop-3 bg-gray-50/70 p-3 sm:p-4 flex flex-col items-center justify-center md:overflow-hidden min-h-[320px] md:min-h-0">
+      <div class="w-full h-full flex flex-col items-center justify-center min-h-0">
+        <div id="btn-preview-main-img" class="group relative max-h-full max-w-full flex items-center justify-center aspect-[5/7] rounded-xl overflow-hidden shadow-sm border border-gray-200 bg-white cursor-pointer" title="Klik untuk memperbesar & preview foto produk">
+          <img id="full-panel-img" src="" alt="Foto Produk" class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105" />
+
+          <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none z-10">
+            <span class="bg-white/95 text-gray-900 text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1.5">
+              <i data-lucide="zoom-in" class="h-3.5 w-3.5 text-blue-600"></i>
+              <span>Preview Gambar</span>
+            </span>
+          </div>
+
+          <div class="absolute bottom-2 right-2 rounded-md bg-black/80 px-2 py-0.5 text-xs font-extrabold text-white backdrop-blur-xs border border-white/20 z-10">
+            <span id="full-panel-badge-img">0 pcs</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
+<!-- MODAL KONFIRMASI HAPUS -->
+<div id="modal-delete-warning" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200">
+  <div id="modal-delete-container" class="w-full max-w-sm scale-95 rounded-2xl bg-white p-5 shadow-2xl transition-all duration-200 border border-gray-100">
+    <div class="flex items-start gap-3">
+      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 border border-amber-200 text-amber-600">
+        <i data-lucide="alert-triangle" class="h-5 w-5"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h3 class="text-sm font-bold text-gray-900">Konfirmasi Hapus Pekerjaan</h3>
+        <p class="text-xs text-gray-500 mt-1 leading-relaxed">
+          Apakah Anda yakin ingin menghapus data pekerjaan <strong id="delete-warning-item-name" class="text-gray-800"></strong>? Tindakan ini bersifat permanen dan tidak dapat dibatalkan.
+        </p>
+      </div>
+    </div>
+    <div class="mt-4 flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
+      <button type="button" id="btn-cancel-delete" class="rounded-lg border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 transition shadow-2xs">Batal</button>
+      <button type="button" id="btn-confirm-delete" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-400 bg-gray-800 hover:bg-gray-900 text-white px-3.5 py-1.5 text-xs font-semibold shadow-xs transition">
+        <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+        <span>Ya, Hapus Data</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DEADLINE -->
+<div id="modal-deadline-picker" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200">
+  <div id="modal-deadline-container" class="w-full max-w-md scale-95 rounded-2xl bg-white p-5 shadow-2xl transition-all duration-200 border border-gray-100 flex flex-col gap-3.5 max-h-[96vh] overflow-y-auto custom-scrollbar">
+
+    <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+      <div class="flex items-center gap-2.5">
+        <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-50 text-amber-700 border border-amber-200">
+          <i data-lucide="calendar-clock" class="h-4 w-4"></i>
+        </div>
+        <h3 class="text-sm font-bold text-gray-900">Pilih Batas Waktu (Deadline)</h3>
+      </div>
+      <button id="btn-close-deadline-modal" type="button" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition" title="Tutup">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+    </div>
+
+    <div class="rounded-xl border border-gray-200 bg-gray-50/60 p-3">
+      <div class="flex items-center justify-between mb-2">
+        <button type="button" id="cal-prev-month" class="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition" title="Bulan Sebelumnya">
+          <i data-lucide="chevron-left" class="h-4 w-4"></i>
+        </button>
+
+        <div class="flex items-center gap-2">
+          <span id="cal-month-year-label" class="text-xs font-bold text-gray-800 tracking-wide">Oktober 2026</span>
+          <button type="button" id="cal-btn-today" class="text-[10px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-md border border-blue-200 transition">Hari Ini</button>
+        </div>
+
+        <button type="button" id="cal-next-month" class="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-100 transition" title="Bulan Berikutnya">
+          <i data-lucide="chevron-right" class="h-4 w-4"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-7 gap-1 text-center mb-1 text-[11px] font-bold text-gray-400">
+        <div class="text-rose-500">Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div>
+      </div>
+
+      <div id="cal-days-grid" class="grid grid-cols-7 gap-1"></div>
+    </div>
+
+    <div id="time-scroll-box" class="rounded-xl border border-amber-200/90 bg-amber-50/60 p-3.5 flex flex-col items-center justify-center gap-2.5 select-none cursor-ns-resize transition" title="Scroll mouse wheel untuk ±15 menit, tahan Shift untuk ±1 jam">
+
+      <div class="flex items-center gap-1.5 text-xs font-bold text-amber-950 w-full justify-start">
+        <i data-lucide="clock" class="h-3.5 w-3.5 text-amber-600"></i>
+        <span>Pemilihan Jam Deadline</span>
+      </div>
+
+      <div class="flex items-center justify-center gap-2 my-1">
+        <div class="flex flex-col items-center">
+          <span id="display-picker-hour" class="text-3xl font-black text-gray-900 tracking-tight">16</span>
+          <span class="text-[9px] uppercase font-bold text-gray-400">Jam</span>
+        </div>
+
+        <span class="text-3xl font-black text-amber-500 pb-3">:</span>
+
+        <div class="flex flex-col items-center">
+          <span id="display-picker-min" class="text-3xl font-black text-gray-900 tracking-tight">00</span>
+          <span class="text-[9px] uppercase font-bold text-gray-400">Menit</span>
+        </div>
+
+        <div class="ml-2 pl-2 border-l border-amber-200 flex flex-col items-start justify-center">
+          <span class="rounded bg-amber-200/80 px-1.5 py-0.5 text-[10px] font-extrabold text-amber-900">WIB</span>
+          <span class="text-[9px] text-amber-700/70 mt-0.5">Realtime</span>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-center gap-1.5 w-full pt-2 border-t border-amber-200/60">
+        <button type="button" id="btn-step-minus-60" class="px-2.5 py-1 text-[10px] font-bold rounded-md bg-white hover:bg-amber-100 text-gray-700 border border-amber-200/80 transition shadow-2xs">-1 Jam</button>
+        <button type="button" id="btn-step-minus-15" class="px-2.5 py-1 text-[10px] font-bold rounded-md bg-white hover:bg-amber-100 text-gray-700 border border-amber-200/80 transition shadow-2xs">-15 Mnt</button>
+        <button type="button" id="btn-step-plus-15" class="px-2.5 py-1 text-[10px] font-bold rounded-md bg-amber-500 hover:bg-amber-600 text-white transition shadow-2xs">+15 Mnt</button>
+        <button type="button" id="btn-step-plus-60" class="px-2.5 py-1 text-[10px] font-bold rounded-md bg-amber-500 hover:bg-amber-600 text-white transition shadow-2xs">+1 Jam</button>
+      </div>
+
+      <div id="time-warning-box" class="hidden items-center gap-1.5 rounded-lg bg-rose-50 border border-rose-200 p-2 text-[11px] font-medium text-rose-700 w-full">
+        <i data-lucide="alert-circle" class="h-3.5 w-3.5 text-rose-500 shrink-0"></i>
+        <span id="time-warning-text">Waktu tidak boleh sebelum waktu realtime dibulatkan ke atas!</span>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between border-t border-gray-100 pt-3">
+      <div class="flex flex-col min-w-0 pr-2">
+        <span class="text-[9px] font-bold uppercase tracking-wider text-gray-400 leading-none">Batas Waktu Terpilih</span>
+        <span id="modal-deadline-preview" class="text-xs font-bold text-gray-900 mt-1 truncate leading-none">-</span>
+      </div>
+
+      <div class="flex items-center gap-2 shrink-0">
+        <button type="button" id="btn-cancel-deadline-modal" class="rounded-lg border border-gray-200 px-3.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition">Batal</button>
+        <button type="button" id="btn-save-deadline" class="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 active:bg-amber-700 px-4 py-1.5 text-xs font-bold text-white shadow-xs transition">
+          <i data-lucide="check" class="h-3.5 w-3.5"></i>
+          <span>Simpan</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL EDIT DESKRIPSI -->
+<div id="modal-edit-desc" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200">
+  <div class="w-full max-w-lg scale-95 rounded-2xl bg-white p-5 shadow-2xl transition-all duration-200 border border-gray-100 flex flex-col gap-3">
+
+    <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+      <div class="flex items-center gap-2.5">
+        <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-200">
+          <i data-lucide="file-text" class="h-4 w-4"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-gray-900">Edit Deskripsi & Catatan</h3>
+          <p class="text-[11px] text-gray-400">Format teks: Bold, Italic, Underline, & Auto-Bullet</p>
+        </div>
+      </div>
+      <button id="btn-close-edit-desc" type="button" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition" title="Tutup">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+    </div>
+
+    <div class="flex items-center justify-between gap-1 p-1.5 rounded-lg bg-gray-50 border border-gray-200/80">
+      <div class="flex items-center gap-1">
+        <button type="button" id="btn-format-bold" class="h-7 w-7 rounded flex items-center justify-center font-black text-xs text-gray-700 hover:bg-gray-200 transition" title="Tebal (Ctrl+B)">B</button>
+        <button type="button" id="btn-format-italic" class="h-7 w-7 rounded flex items-center justify-center italic font-serif text-xs text-gray-700 hover:bg-gray-200 transition" title="Miring (Ctrl+I)">I</button>
+        <button type="button" id="btn-format-underline" class="h-7 w-7 rounded flex items-center justify-center underline text-xs font-semibold text-gray-700 hover:bg-gray-200 transition" title="Garis Bawah (Ctrl+U)">U</button>
+        <div class="h-4 w-[1px] bg-gray-300 mx-1"></div>
+        <button type="button" id="btn-format-bullet" class="h-7 px-2 rounded flex items-center gap-1 text-xs font-bold text-gray-700 hover:bg-gray-200 transition" title="Sisipkan Bullet Point (•)">
+          <span class="text-sm leading-none">•</span>
+          <span class="text-[10px]">Poin</span>
+        </button>
+      </div>
+      <span class="text-[10px] text-gray-400 hidden sm:inline">Ketik "-" lalu spasi untuk membuat •</span>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <div id="modal-desc-editor" contenteditable="true" data-placeholder="Tuliskan spesifikasi produk, instruksi pengerjaan, atau catatan penting..." class="rich-editor w-full min-h-[180px] max-h-[300px] overflow-y-auto custom-scrollbar rounded-xl border border-gray-200 p-3.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white transition shadow-2xs leading-relaxed"></div>
+    </div>
+
+    <div class="flex items-center justify-between border-t border-gray-100 pt-3">
+      <span class="text-[10px] text-gray-400">Mendukung Enter otomatis melanjutkan poin</span>
+      <div class="flex items-center gap-2">
+        <button type="button" id="btn-cancel-edit-desc" class="rounded-lg border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition shadow-2xs">Batal</button>
+        <button type="button" id="btn-save-edit-desc" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 text-xs font-bold shadow-xs transition">
+          <i data-lucide="check" class="h-3.5 w-3.5"></i>
+          <span>Simpan Perubahan</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL STATUS PROSES -->
+<div id="modal-process-picker" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200">
+  <div class="w-full max-w-sm scale-95 rounded-2xl bg-white p-5 shadow-2xl transition-all duration-200 border border-gray-100 flex flex-col gap-3">
+
+    <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+      <div class="flex items-center gap-2.5">
+        <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-50 text-rose-600 border border-rose-200">
+          <i data-lucide="sliders-horizontal" class="h-4 w-4"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-gray-900">Ubah Tahapan Proses</h3>
+          <p class="text-[11px] text-gray-400">Pilih status proses pekerjaan saat ini</p>
+        </div>
+      </div>
+      <button id="btn-close-process-modal" type="button" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition" title="Tutup">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+    </div>
+
+    <div id="process-options-list" class="grid grid-cols-2 gap-2 my-1"></div>
+
+  </div>
+</div>
+
+<!-- MODAL ATTACHMENT -->
+<div id="modal-attachment-manager" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200">
+  <div class="w-full max-w-md scale-95 rounded-2xl bg-white p-5 shadow-2xl transition-all duration-200 border border-gray-100 flex flex-col gap-3">
+
+    <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+      <div class="flex items-center gap-2.5">
+        <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-50 text-sky-600 border border-sky-200">
+          <i data-lucide="paperclip" class="h-4 w-4"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-gray-900">Berkas Lampiran (Attachment)</h3>
+          <p class="text-[11px] text-gray-400">Daftar lampiran berkas dan form unggah</p>
+        </div>
+      </div>
+      <button id="btn-close-attachment-modal" type="button" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition" title="Tutup">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+    </div>
+
+    <div class="max-h-[280px] overflow-y-auto custom-scrollbar flex flex-col gap-2 pr-0.5 my-1">
+
+      <div id="attachment-list-container" class="flex flex-col gap-1.5"></div>
+
+      <div id="attachment-upload-box" class="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-dashed border-sky-300 bg-sky-50/50 hover:bg-sky-50 transition">
+        <div class="flex items-center gap-2 min-w-0">
+          <i data-lucide="upload-cloud" class="h-5 w-5 text-sky-600 shrink-0"></i>
+          <div class="flex flex-col min-w-0">
+            <span class="text-xs font-semibold text-sky-900 truncate">Tambah berkas baru</span>
+            <span class="text-[10px] text-sky-600/80 truncate">Mendukung gambar, PDF, DXF, CDR</span>
+          </div>
+        </div>
+        <button type="button" id="btn-trigger-upload-attachment" class="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition shadow-2xs shrink-0">Pilih File</button>
+        <input type="file" id="input-attachment-file" class="hidden" multiple />
+      </div>
+
+    </div>
+
+    <div class="flex items-center justify-end border-t border-gray-100 pt-3">
+      <button type="button" id="btn-done-attachment" class="rounded-lg bg-gray-800 hover:bg-gray-900 text-white px-4 py-1.5 text-xs font-bold transition shadow-xs">Selesai</button>
+    </div>
+
+  </div>
+</div>

@@ -1,44 +1,93 @@
-// Naikkan angka versi ini setiap kali Anda mengubah file aplikasi agar cache lama dibuang.
-const CACHE = "laserworks-v2";
-const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png"];
-const CDN = ["https://cdn.tailwindcss.com", "https://unpkg.com/lucide@latest/dist/umd/lucide.js"];
+// Service worker LaserWorks.
+// - Precache: seluruh file aplikasi (agar langsung jalan offline setelah instal).
+// - Runtime: file lain dari origin yang sama dan CDN (Tailwind, Lucide) disimpan saat pertama dimuat,
+//   dan diperbarui di latar belakang (stale-while-revalidate).
+// Naikkan VERSION setiap kali daftar PRECACHE berubah atau ingin memaksa cache lama dibuang.
+const VERSION = "v1";
+const CACHE = `laserworks-${VERSION}`;
 
-self.addEventListener("install", (e) => {
-  e.waitUntil((async () => {
-    const cache = await caches.open(CACHE);
-    await cache.addAll(SHELL);
-    // Library CDN disimpan juga supaya aplikasi bisa dibuka saat offline
-    await Promise.allSettled(CDN.map(async (url) => {
-      const req = new Request(url, { mode: "no-cors" });
-      await cache.put(req, await fetch(req));
-    }));
-    await self.skipWaiting();
-  })());
+const PRECACHE = [
+  "./",
+  "index.html",
+  "manifest.webmanifest",
+  "css/app.css",
+  "image/default-image.svg",
+  "icons/icon-192.png",
+  "icons/icon-512.png",
+  "icons/icon-maskable-512.png",
+  "icons/apple-touch-icon.png",
+  "js/main.js",
+  "js/routes.js",
+  "js/core/config.js",
+  "js/core/db.js",
+  "js/core/items.js",
+  "js/core/router.js",
+  "js/core/state.js",
+  "js/core/utils.js",
+  "js/ui/header.js",
+  "js/ui/imagePreview.js",
+  "js/ui/modal.js",
+  "js/ui/sidebar.js",
+  "js/ui/toast.js",
+  "js/pages/home.js",
+  "js/pages/home/addModal.js",
+  "js/pages/notifications.js",
+  "js/pages/settings.js",
+  "js/pages/detail/index.js",
+  "js/pages/detail/actions.js",
+  "js/pages/detail/attachments.js",
+  "js/pages/detail/deadline.js",
+  "js/pages/detail/description.js",
+  "js/pages/detail/photo.js",
+  "js/pages/detail/process.js",
+  "js/pages/detail/qty.js",
+  "js/pages/detail/subtasks.js",
+  "js/pages/detail/title.js",
+  "pages/home.html",
+  "pages/detail.html",
+  "pages/notifications.html",
+  "pages/settings.html",
+];
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting())
+  );
 });
 
-self.addEventListener("activate", (e) => {
-  e.waitUntil((async () => {
-    for (const key of await caches.keys()) if (key !== CACHE) await caches.delete(key);
-    await self.clients.claim();
-  })());
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith("laserworks-") && k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
 });
 
-self.addEventListener("fetch", (e) => {
-  const req = e.request;
-  if (req.method !== "GET" || !req.url.startsWith("http")) return;
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  if (req.method !== "GET") return;
+  const url = new URL(req.url);
+  if (!url.protocol.startsWith("http")) return;
 
-  // Halaman: ambil dari jaringan dulu (agar update cepat sampai), cadangan dari cache saat offline
+  // Navigasi: coba jaringan dulu, jatuh ke index.html di cache saat offline
   if (req.mode === "navigate") {
-    e.respondWith(fetch(req).catch(() => caches.match("./index.html")));
+    event.respondWith(
+      fetch(req).catch(() => caches.match("index.html", { ignoreSearch: true }))
+    );
     return;
   }
 
-  // Aset lain: pakai cache, sambil diam-diam diperbarui dari jaringan
-  e.respondWith(caches.match(req).then((hit) => {
-    const net = fetch(req).then((res) => {
-      if (res.ok || res.type === "opaque") caches.open(CACHE).then((c) => c.put(req, res.clone()));
-      return res;
-    }).catch(() => hit);
-    return hit || net;
-  }));
+  // Lainnya: stale-while-revalidate
+  event.respondWith(
+    caches.open(CACHE).then(async (cache) => {
+      const cached = await cache.match(req, { ignoreSearch: true });
+      const network = fetch(req)
+        .then((res) => {
+          if (res && (res.ok || res.type === "opaque")) cache.put(req, res.clone());
+          return res;
+        })
+        .catch(() => cached);
+      return cached || network;
+    })
+  );
 });

@@ -1,0 +1,73 @@
+<section class="shrink-0 rounded-xl border border-gray-100 bg-white p-3.5">
+  <div class="mb-1 flex items-center gap-1.5 text-[11px] text-gray-400">
+    <i data-lucide="layout-dashboard" class="h-3 w-3"></i>
+    <span>Settings</span>
+  </div>
+  <h1 class="text-base font-semibold tracking-tight text-gray-900">Settings</h1>
+  <p class="text-xs text-gray-500">Pengaturan aplikasi dan cadangan data.</p>
+</section>
+
+<div class="flex-1 overflow-y-auto custom-scrollbar mt-3 min-h-0">
+  <div class="max-w-2xl flex flex-col gap-3">
+
+    <!-- CADANGAN DATA -->
+    <section class="rounded-xl border border-gray-200 bg-white p-4 shadow-xs">
+      <div class="flex items-center gap-2.5 pb-3 border-b border-gray-100">
+        <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-200">
+          <i data-lucide="database" class="h-4 w-4"></i>
+        </div>
+        <div>
+          <h2 class="text-sm font-bold text-gray-900">Cadangan Data</h2>
+          <p class="text-[11px] text-gray-400">Ekspor dan impor semua pekerjaan dalam format JSON (termasuk foto dan lampiran)</p>
+        </div>
+        <span id="settings-count" class="ml-auto text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">0 pekerjaan</span>
+      </div>
+
+      <!-- Ekspor -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-3 border-b border-gray-100">
+        <div>
+          <p class="text-xs font-semibold text-gray-800">Ekspor JSON</p>
+          <p class="text-[11px] text-gray-500">Unduh seluruh data sebagai satu file cadangan.</p>
+        </div>
+        <button type="button" id="btn-export-json" class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 px-3.5 py-1.5 text-xs font-bold text-white shadow-2xs transition shrink-0">
+          <i data-lucide="download" class="h-3.5 w-3.5"></i>
+          <span>Ekspor Data</span>
+        </button>
+      </div>
+
+      <!-- Impor -->
+      <div class="flex flex-col gap-2.5 pt-3">
+        <div>
+          <p class="text-xs font-semibold text-gray-800">Impor JSON</p>
+          <p class="text-[11px] text-gray-500">Pilih file cadangan hasil ekspor aplikasi ini.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <label class="flex items-start gap-2 p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer has-[:checked]:border-blue-400 has-[:checked]:bg-blue-50/60">
+            <input type="radio" name="import-mode" value="merge" checked class="mt-0.5 accent-blue-600" />
+            <span class="flex flex-col">
+              <span class="text-xs font-bold text-gray-800">Gabungkan</span>
+              <span class="text-[10px] text-gray-500">Tambahkan ke data yang ada. Data yang sama (nama dan waktu dibuat) dilewati.</span>
+            </span>
+          </label>
+          <label class="flex items-start gap-2 p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer has-[:checked]:border-rose-400 has-[:checked]:bg-rose-50/60">
+            <input type="radio" name="import-mode" value="replace" class="mt-0.5 accent-rose-600" />
+            <span class="flex flex-col">
+              <span class="text-xs font-bold text-gray-800">Ganti semua</span>
+              <span class="text-[10px] text-gray-500">Hapus semua data saat ini lalu isi dari file.</span>
+            </span>
+          </label>
+        </div>
+
+        <div>
+          <button type="button" id="btn-trigger-import" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 px-3.5 py-1.5 text-xs font-bold text-gray-700 shadow-2xs transition">
+            <i data-lucide="upload" class="h-3.5 w-3.5"></i>
+            <span>Pilih File JSON & Impor</span>
+          </button>
+          <input type="file" id="input-import-json" accept="application/json,.json" class="hidden" />
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
