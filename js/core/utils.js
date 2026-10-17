@@ -73,3 +73,29 @@ export const fmtShortDeadline = (iso) => {
   const dt = safeDate(iso);
   return fmtShortParts(dt.getFullYear(), dt.getMonth(), dt.getDate(), dt.getHours(), dt.getMinutes());
 };
+/* ===== Perkecil foto sebelum disimpan =====
+   Foto ponsel (3-5 MB) diperkecil ke sisi terpanjang maksimal 1000 px dan disimpan sebagai JPEG,
+   supaya IndexedDB dan file ekspor JSON tidak membengkak. Mengembalikan data URL. */
+export async function resizeImage(file, maxSize = 1000, quality = 0.85) {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
+    const w = Math.round(bitmap.width * scale);
+    const h = Math.round(bitmap.height * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const c = canvas.getContext("2d");
+    c.fillStyle = "#ffffff"; // PNG transparan diberi latar putih karena JPEG tidak mendukung transparansi
+    c.fillRect(0, 0, w, h);
+    c.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close?.();
+
+    return canvas.toDataURL("image/jpeg", quality);
+  } catch (err) {
+    // Format yang tidak bisa didekode canvas (misalnya SVG): simpan apa adanya
+    console.warn("resizeImage gagal, memakai file asli:", err);
+    return fileToBase64(file);
+  }
+}
